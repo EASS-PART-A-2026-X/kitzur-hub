@@ -1,0 +1,16 @@
+{
+  "status": true,
+  "errorCode": 0,
+  "result": {
+    "meet": {"topic": "שיעור 3: התמדה", "meetingStartTimeStr": "2 בנובמבר 2026", "accessId": "SECRET-ACCESS-ID"},
+    "duration": 600,
+    "viewMp4Url": "https://cdn.example.com/rec.mp4?Signature=SECRET-SIGNATURE",
+    "transcriptList": [
+      {"ts": "00:00:01.000", "end_ts": "00:00:04.000", "username": "ד\"ר ישראלי", "text": "היום נלמד על", "userId": "u1"},
+      {"ts": "00:00:05.000", "end_ts": "00:00:09.000", "username": "ד\"ר ישראלי", "text": "SQLite ו-SQLModel.", "avatar": "https://cdn.example.com/a.png"},
+      {"ts": "00:00:50.000", "end_ts": "00:00:55.000", "username": "יואב כהן", "text": "איפה נשמר הקובץ?"},
+      {"ts": "bad", "text": "שורה עם זמן שבור נזרקת"},
+      {"ts": "00:01:00.000", "end_ts": "00:01:20.000", "username": "ד\"ר ישראלי", "text": "על volume, כדי שישרוד הפעלה מחדש."}
+    ]
+  }
+}
