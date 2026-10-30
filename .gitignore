@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+
+# Secrets and local data
+.env
+data/
+*.db
+private/
+
+# Local docs
+docs/guide.html
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
