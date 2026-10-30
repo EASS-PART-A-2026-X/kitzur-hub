@@ -18,6 +18,22 @@ The design, decisions and course requirements live in `docs/guide.html` (local p
    `backend/scripts/anonymize_transcript.py` (speaker roles, names in text, contact details).
    Raw files and the names list stay in `private/` (gitignored).
 
+## Frontend rules (`frontend/`)
+1. TypeScript strict, no `any`. JSDoc on every function and component.
+2. Layers, each with one job:
+   - `config/constants.ts`: every magic value and route path. Values that mirror the backend say so.
+   - `api/`: the only code that does HTTP (`client.ts`), error model (`errors.ts`), query keys (`keys.ts`),
+     friendly type names (`types.ts`). `schema.d.ts` is generated: never edit it.
+   - `hooks/`: all data access and shared logic (`useCourses`, `useErrorMessage`). Components never call `api` directly.
+   - `components/`: reusable UI with no data fetching. `pages/`: one route each, composed from hooks + components.
+   - `app/`: providers, theme, router, query client policy. `i18n/`: setup and locale files.
+3. Every data view renders through `<QueryState>` (loading, error with retry, empty with a next step, content).
+4. Errors are turned into text only by `useErrorMessage`. Writes never retry automatically.
+5. No hard-coded UI text: every string is a key in `i18n/locales/he.ts`. Keys are type-checked.
+6. RTL: CSS logical properties only, `dir="auto"` on user text and transcript segments.
+7. User text is rendered as text. `dangerouslySetInnerHTML` is a lint error.
+8. After any backend API change: `uv run python -m scripts.export_openapi` (backend/), then `npm run gen:api` (frontend/).
+
 ## Progress tracking
 The single source of truth is the JSON block `<script id="progress">` inside `docs/guide.html`.
 - Starting a stage: set its `status` to `in_progress` and `agent` to your name.
@@ -25,7 +41,11 @@ The single source of truth is the JSON block `<script id="progress">` inside `do
 - Blocked: set `status` to `blocked` and put the question in `note`.
 Use `python scripts/progress.py <stage> <status> --agent <name> --note "..."` instead of editing by hand (`python scripts/progress.py` lists stages). Statuses: `todo`, `in_progress`, `done`, `blocked`.
 
-## Commands (from `backend/`)
+## Commands
+Frontend (from `frontend/`): `npm ci`, `npm run dev` (http://localhost:5173, proxies `/api` to :8000),
+`npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
+
+Backend (from `backend/`):
 ```bash
 uv sync                      # install
 uv run fastapi dev           # run on :8000
