@@ -1,0 +1,1 @@
+"""Kitzur Hub backend package."""
