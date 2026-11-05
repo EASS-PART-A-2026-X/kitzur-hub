@@ -72,7 +72,7 @@ All settings are listed in [`.env.example`](.env.example). No secrets are needed
 
 ```bash
 cd backend
-uv run pytest                                 # 65 tests, each on its own temporary database
+uv run pytest                                 # each test uses its own temporary database
 uv run ruff check . && uv run ruff format --check .
 python3 ../scripts/check_no_em_dash.py        # repo style rule
 ```
@@ -105,6 +105,19 @@ Lists accept `limit` (1-100, default 50) and `offset`. Request bodies reject unk
 - **Real transcripts in this repo** (`backend/app/seed_data/`) went through `backend/scripts/anonymize_transcript.py`: speakers become roles, and every participant name in the text, e-mail address and phone number is replaced by a placeholder. Raw files stay in the gitignored `private/` folder.
 - **Duplicates:** the same transcript uploaded twice to one course returns 409 with the existing `lecture_id`.
 - **Limits:** files are capped at 5 MB and 300,000 characters.
+
+### Course materials
+
+Syllabus and past exams (`kind`: `syllabus` or `past_exam`) are stored as extracted text; the file itself is not kept.
+
+| Extension | Handling |
+|---|---|
+| `.pdf` | Text layer via pypdf. Scanned (image-only) or password-protected PDFs return 422 |
+| `.txt`, `.md` | UTF-8 text |
+
+- **Hebrew PDFs:** right-to-left PDFs often extract with mirrored parentheses (`)טקסט(`); complete mirrored pairs are swapped back. Pages that come out one word per line are joined into paragraphs, and other pages keep their line breaks.
+- **Duplicates:** the same text uploaded twice to one course returns 409 with the existing `material_id`.
+- **Checking a real file:** `uv run python -m scripts.extract_material <file>` prints what would be stored.
 
 ### Manual checks
 

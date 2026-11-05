@@ -209,6 +209,66 @@ export interface paths {
         patch: operations["update_task_tasks__task_id__patch"];
         trace?: never;
     };
+    "/courses/{course_id}/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Materials
+         * @description List a course's materials, newest first, optionally filtered by kind.
+         */
+        get: operations["list_materials_courses__course_id__materials_get"];
+        put?: never;
+        /**
+         * Upload Material
+         * @description Upload a syllabus or past exam and store its extracted text.
+         *
+         *     Developer note: PDF parsing is CPU-bound and synchronous, so it runs in the
+         *     thread pool; calling it directly would block every other request while a
+         *     large PDF is parsed.
+         *
+         *     Raises:
+         *         HTTPException: 404 unknown course, 409 same text already in this course,
+         *             413 file too large, 415 unsupported format, 422 no usable text.
+         */
+        post: operations["upload_material_courses__course_id__materials_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/materials/{material_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Material
+         * @description Return one material with its extracted text.
+         */
+        get: operations["read_material_materials__material_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Material
+         * @description Delete a material.
+         */
+        delete: operations["delete_material_materials__material_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Material
+         * @description Change the kind or display name. The extracted text cannot be edited.
+         */
+        patch: operations["update_material_materials__material_id__patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -217,6 +277,12 @@ export interface components {
         Body_import_lecture_courses__course_id__lectures_import_post: {
             /** File */
             file: string;
+        };
+        /** Body_upload_material_courses__course_id__materials_post */
+        Body_upload_material_courses__course_id__materials_post: {
+            /** File */
+            file: string;
+            kind: components["schemas"]["MaterialKind"];
         };
         /**
          * CourseCreate
@@ -326,6 +392,67 @@ export interface components {
             title?: string | null;
             /** Held On */
             held_on?: string | null;
+        };
+        /**
+         * MaterialDetail
+         * @description Material in single-item responses, including the extracted text.
+         */
+        MaterialDetail: {
+            kind: components["schemas"]["MaterialKind"];
+            /** Filename */
+            filename: string;
+            /** Id */
+            id: number;
+            /** Course Id */
+            course_id: number;
+            /** Page Count */
+            page_count: number | null;
+            /** Char Count */
+            char_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Text */
+            text: string;
+        };
+        /**
+         * MaterialKind
+         * @description What a course material document is.
+         * @enum {string}
+         */
+        MaterialKind: "syllabus" | "past_exam";
+        /**
+         * MaterialPublic
+         * @description Material in list responses: metadata only.
+         */
+        MaterialPublic: {
+            kind: components["schemas"]["MaterialKind"];
+            /** Filename */
+            filename: string;
+            /** Id */
+            id: number;
+            /** Course Id */
+            course_id: number;
+            /** Page Count */
+            page_count: number | null;
+            /** Char Count */
+            char_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * MaterialUpdate
+         * @description PATCH /materials/{id} body: fix the kind or the display name.
+         */
+        MaterialUpdate: {
+            kind?: components["schemas"]["MaterialKind"] | null;
+            /** Filename */
+            filename?: string | null;
         };
         /**
          * Segment
@@ -963,6 +1090,190 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_materials_courses__course_id__materials_get: {
+        parameters: {
+            query?: {
+                kind?: components["schemas"]["MaterialKind"] | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                course_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialPublic"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_material_courses__course_id__materials_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_material_courses__course_id__materials_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialPublic"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read_material_materials__material_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                material_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_material_materials__material_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                material_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_material_materials__material_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                material_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialPublic"];
                 };
             };
             /** @description Validation Error */

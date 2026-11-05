@@ -777,6 +777,273 @@
           }
         }
       }
+    },
+    "/courses/{course_id}/materials": {
+      "post": {
+        "tags": [
+          "materials"
+        ],
+        "summary": "Upload Material",
+        "description": "Upload a syllabus or past exam and store its extracted text.\n\nDeveloper note: PDF parsing is CPU-bound and synchronous, so it runs in the\nthread pool; calling it directly would block every other request while a\nlarge PDF is parsed.\n\nRaises:\n    HTTPException: 404 unknown course, 409 same text already in this course,\n        413 file too large, 415 unsupported format, 422 no usable text.",
+        "operationId": "upload_material_courses__course_id__materials_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_material_courses__course_id__materials_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialPublic"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Content Too Large"
+          },
+          "415": {
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "description": "Unprocessable Content"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "materials"
+        ],
+        "summary": "List Materials",
+        "description": "List a course's materials, newest first, optionally filtered by kind.",
+        "operationId": "list_materials_courses__course_id__materials_get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/MaterialKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaterialPublic"
+                  },
+                  "title": "Response List Materials Courses  Course Id  Materials Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/materials/{material_id}": {
+      "get": {
+        "tags": [
+          "materials"
+        ],
+        "summary": "Read Material",
+        "description": "Return one material with its extracted text.",
+        "operationId": "read_material_materials__material_id__get",
+        "parameters": [
+          {
+            "name": "material_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Material Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "materials"
+        ],
+        "summary": "Update Material",
+        "description": "Change the kind or display name. The extracted text cannot be edited.",
+        "operationId": "update_material_materials__material_id__patch",
+        "parameters": [
+          {
+            "name": "material_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Material Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "materials"
+        ],
+        "summary": "Delete Material",
+        "description": "Delete a material.",
+        "operationId": "delete_material_materials__material_id__delete",
+        "parameters": [
+          {
+            "name": "material_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Material Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -794,6 +1061,24 @@
           "file"
         ],
         "title": "Body_import_lecture_courses__course_id__lectures_import_post"
+      },
+      "Body_upload_material_courses__course_id__materials_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MaterialKind"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "kind"
+        ],
+        "title": "Body_upload_material_courses__course_id__materials_post"
       },
       "CourseCreate": {
         "properties": {
@@ -1113,6 +1398,157 @@
         "type": "object",
         "title": "LectureUpdate",
         "description": "PATCH /lectures/{id} body. The transcript itself is immutable."
+      },
+      "MaterialDetail": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/MaterialKind"
+          },
+          "filename": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Filename"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "course_id": {
+            "type": "integer",
+            "title": "Course Id"
+          },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "char_count": {
+            "type": "integer",
+            "title": "Char Count"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "filename",
+          "id",
+          "course_id",
+          "page_count",
+          "char_count",
+          "created_at",
+          "text"
+        ],
+        "title": "MaterialDetail",
+        "description": "Material in single-item responses, including the extracted text."
+      },
+      "MaterialKind": {
+        "type": "string",
+        "enum": [
+          "syllabus",
+          "past_exam"
+        ],
+        "title": "MaterialKind",
+        "description": "What a course material document is."
+      },
+      "MaterialPublic": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/MaterialKind"
+          },
+          "filename": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Filename"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "course_id": {
+            "type": "integer",
+            "title": "Course Id"
+          },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "char_count": {
+            "type": "integer",
+            "title": "Char Count"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "filename",
+          "id",
+          "course_id",
+          "page_count",
+          "char_count",
+          "created_at"
+        ],
+        "title": "MaterialPublic",
+        "description": "Material in list responses: metadata only."
+      },
+      "MaterialUpdate": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MaterialKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MaterialUpdate",
+        "description": "PATCH /materials/{id} body: fix the kind or the display name."
       },
       "Segment": {
         "properties": {

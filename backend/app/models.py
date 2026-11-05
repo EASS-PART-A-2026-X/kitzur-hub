@@ -54,6 +54,13 @@ class SourceFormat(StrEnum):
     TEXT = "txt"
 
 
+class MaterialKind(StrEnum):
+    """What a course material document is."""
+
+    SYLLABUS = "syllabus"
+    PAST_EXAM = "past_exam"
+
+
 class Speaker(StrEnum):
     """Anonymized speaker roles. Real names are never stored."""
 
@@ -108,6 +115,7 @@ class Course(CourseBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     lectures: list["Lecture"] = Relationship(cascade_delete=True)
     tasks: list["Task"] = Relationship(cascade_delete=True)
+    materials: list["Material"] = Relationship(cascade_delete=True)
 
 
 class CourseCreate(CourseBase):
@@ -253,3 +261,55 @@ class TaskPublic(TaskBase):
     id: int
     course_id: int
     origin: TaskOrigin
+
+
+# Material
+
+
+class MaterialBase(SQLModel):
+    """Fields the user can see and edit on a material."""
+
+    kind: MaterialKind
+    filename: str = Field(min_length=1, max_length=200)
+
+
+class Material(MaterialBase, table=True):
+    """A syllabus or past exam, stored as extracted text (the file itself is not kept).
+
+    ``sha256`` hashes the extracted text and is unique per course, so the same
+    document uploaded twice is detected even under another file name.
+    """
+
+    __table_args__ = (UniqueConstraint("course_id", "sha256"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    course_id: int = Field(foreign_key="course.id", index=True, ondelete="CASCADE")
+    text: str
+    page_count: int | None = Field(default=None, ge=1)
+    sha256: str = Field(min_length=64, max_length=64)
+    created_at: datetime
+
+
+class MaterialUpdate(UpdateSchema):
+    """PATCH /materials/{id} body: fix the kind or the display name."""
+
+    NOT_NULL: ClassVar[frozenset[str]] = frozenset({"kind", "filename"})
+
+    kind: MaterialKind | None = None
+    filename: str | None = Field(default=None, min_length=1, max_length=200)
+
+
+class MaterialPublic(MaterialBase):
+    """Material in list responses: metadata only."""
+
+    id: int
+    course_id: int
+    page_count: int | None
+    char_count: int
+    created_at: datetime
+
+
+class MaterialDetail(MaterialPublic):
+    """Material in single-item responses, including the extracted text."""
+
+    text: str
