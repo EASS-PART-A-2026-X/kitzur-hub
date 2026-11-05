@@ -70,12 +70,43 @@ All settings are listed in [`.env.example`](.env.example). No secrets are needed
 
 ## Test
 
+### Backend
 ```bash
 cd backend
 uv run pytest                                 # each test uses its own temporary database
 uv run ruff check . && uv run ruff format --check .
 python3 ../scripts/check_no_em_dash.py        # repo style rule
 ```
+
+### Frontend
+```bash
+cd frontend
+npm ci
+npm test                    # component tests: Vitest + Testing Library, backend mocked with MSW
+npm run lint && npm run typecheck
+```
+
+### End to end (real browser, real backend)
+```bash
+cd frontend
+npx playwright install chromium   # once
+npm run e2e                       # starts a fresh backend (own SQLite file) and the dev server
+```
+`npm run e2e` replays the operational principle: create a course, drop `samples/lecture-03.transcript.md`, reload, open it and search it. It also adds, completes and deletes a task, and answers a graded practice question. To test a running stack instead (for example Docker Compose), set `E2E_BASE_URL=http://localhost:8501`.
+
+### Break it on purpose
+Each guard below was removed once to confirm that a test fails without it.
+
+| Guard | Test that fails |
+|---|---|
+| A write with no reply is "maybe saved", not "server down" (`api/errors.ts`) | `errors.test.ts`, `tasks-tab.test.tsx` |
+| Lists refresh after a write, even a failed one (`hooks/useTasks.ts`) | `tasks-tab.test.tsx` |
+| Server validation errors appear on the form field (`hooks/useServerErrors.ts`) | `courses-page.test.tsx` |
+| 404 and 422 are never retried (`app/queryClient.ts`) | `errors.test.ts` |
+| Deadlines use the Israeli calendar day (`lib/dates.ts`) | `dates.test.ts` |
+| Mixed Hebrew/English text renders right to left (`lib/text.ts`) | `text.test.ts` |
+| The server, not the client, grades answers (`routers/questions.py`) | `test_questions.py` |
+| Mirrored PDF brackets are fixed (`materials.py`) | `test_materials.py` |
 
 ## API
 

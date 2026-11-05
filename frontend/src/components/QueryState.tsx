@@ -37,7 +37,7 @@ export function QueryState<T>({
   skeletonRows = 3,
 }: QueryStateProps<T>) {
   const { t } = useTranslation();
-  const describe = useErrorMessage();
+  const describeError = useErrorMessage();
 
   if (query.isPending) {
     return (
@@ -52,7 +52,7 @@ export function QueryState<T>({
     return (
       <Alert color="red" role="alert">
         <Stack gap="xs" align="flex-start">
-          <Text>{describe(query.error).summary}</Text>
+          <Text>{describeError(query.error).summary}</Text>
           <Button size="xs" variant="light" onClick={() => void query.refetch()}>
             {t("common.retry")}
           </Button>

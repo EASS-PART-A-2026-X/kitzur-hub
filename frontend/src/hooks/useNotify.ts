@@ -20,15 +20,15 @@ export interface Notify {
  * @returns success and error toast functions.
  */
 export function useNotify(): Notify {
-  const describe = useErrorMessage();
+  const describeError = useErrorMessage();
   const success = useCallback((message: string) => {
     notifications.show({ message, color: "teal", autoClose: TOAST_MS });
   }, []);
   const error = useCallback(
     (err: unknown) => {
-      notifications.show({ message: describe(err).summary, color: "red", autoClose: false });
+      notifications.show({ message: describeError(err).summary, color: "red", autoClose: false });
     },
-    [describe],
+    [describeError],
   );
   return useMemo(() => ({ success, error }), [success, error]);
 }

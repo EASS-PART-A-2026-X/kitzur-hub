@@ -16,7 +16,7 @@ export interface ErrorMessages {
 /**
  * Hook returning a function that describes errors in the current language.
  *
- * @returns `describe(error)`, safe to call with anything a promise rejected with.
+ * @returns `describeError(error)`, safe to call with anything a promise rejected with.
  */
 export function useErrorMessage(): (error: unknown) => ErrorMessages {
   const { t } = useTranslation();

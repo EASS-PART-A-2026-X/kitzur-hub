@@ -15,16 +15,16 @@ import { useNotify } from "./useNotify";
  * @returns `(form, error) => void`.
  */
 export function useServerErrors() {
-  const describe = useErrorMessage();
+  const describeError = useErrorMessage();
   const notify = useNotify();
   return useCallback(
     // biome-ignore lint/suspicious/noExplicitAny: works with any form's value type
     (form: UseFormReturnType<any>, error: unknown) => {
-      const { fields } = describe(error);
+      const { fields } = describeError(error);
       const shown = Object.keys(fields).filter((field) => field in form.getValues());
       form.setErrors(Object.fromEntries(shown.map((field) => [field, fields[field]])));
       if (shown.length === 0) notify.error(error);
     },
-    [describe, notify],
+    [describeError, notify],
   );
 }

@@ -32,7 +32,7 @@ export function UploadResults<T>({
   onClear,
 }: UploadResultsProps<T>) {
   const { t } = useTranslation();
-  const describe = useErrorMessage();
+  const describeError = useErrorMessage();
   if (rows.length === 0) return null;
   const busy = rows.some((row) => row.status === "waiting" || row.status === "uploading");
   return (
@@ -58,7 +58,7 @@ export function UploadResults<T>({
               </Text>
               <Text size="sm" c={row.status === "error" ? "red" : "dimmed"}>
                 {row.status === "done" && row.result !== undefined && describeSuccess(row.result)}
-                {row.status === "error" && describe(row.error).summary}
+                {row.status === "error" && describeError(row.error).summary}
                 {row.status === "waiting" && t("upload.waiting")}
               </Text>
               {link && (
