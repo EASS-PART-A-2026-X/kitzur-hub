@@ -40,6 +40,14 @@ describe("fromResponse", () => {
   });
 });
 
+describe("422 without field errors", () => {
+  it("is a business-rule failure, not a form mistake", () => {
+    const error = fromResponse(422, { detail: "the file contains no transcript text" });
+    expect(error.kind).toBe("unprocessable");
+    expect(error.fieldErrors).toEqual([]);
+  });
+});
+
 describe("fromNetworkFailure", () => {
   it("treats a failed read as unreachable and a failed write as unknown outcome", () => {
     expect(fromNetworkFailure("GET", new TypeError("fetch failed")).kind).toBe("unreachable");

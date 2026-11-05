@@ -8,6 +8,11 @@ export const queryKeys = {
     list: () => [...queryKeys.courses.all, "list"] as const,
     detail: (courseId: number) => [...queryKeys.courses.all, "detail", courseId] as const,
   },
+  lectures: {
+    all: ["lectures"] as const,
+    byCourse: (courseId: number) => [...queryKeys.lectures.all, "course", courseId] as const,
+    detail: (lectureId: number) => [...queryKeys.lectures.all, "detail", lectureId] as const,
+  },
   tasks: {
     all: ["tasks"] as const,
     byCourse: (courseId: number) => [...queryKeys.tasks.all, courseId] as const,

@@ -46,7 +46,7 @@ export const FIELD_LIMITS = {
 } as const;
 
 /** Course page tabs, in display order. The first one is the default. */
-export const COURSE_TABS = ["tasks"] as const;
+export const COURSE_TABS = ["lectures", "tasks"] as const;
 
 /** One tab of the course page. */
 export type CourseTab = (typeof COURSE_TABS)[number];
@@ -55,6 +55,12 @@ export type CourseTab = (typeof COURSE_TABS)[number];
 export const TASK_KINDS = ["hw", "project", "exam", "quiz", "other"] as const;
 export const TASK_STATUSES = ["todo", "doing", "done"] as const;
 
+/** Delay before a typed search filters the transcript. */
+export const SEARCH_DEBOUNCE_MS = 200;
+
+/** Transcript blocks rendered at once; "show more" adds another page. */
+export const TRANSCRIPT_PAGE_SIZE = 200;
+
 /** How long a success toast stays on screen. */
 export const TOAST_MS = 3000;
 
@@ -62,6 +68,7 @@ export const TOAST_MS = 3000;
 export const ROUTE_PATTERNS = {
   courses: "/",
   course: "/courses/:courseId",
+  lecture: "/lectures/:lectureId",
 } as const;
 
 /** Route builders for links, so links and the router cannot drift apart. */
@@ -69,4 +76,5 @@ export const ROUTES = {
   courses: "/",
   course: (courseId: number) => `/courses/${courseId}`,
   courseTab: (courseId: number, tab: CourseTab) => `/courses/${courseId}/${tab}`,
+  lecture: (lectureId: number) => `/lectures/${lectureId}`,
 } as const;

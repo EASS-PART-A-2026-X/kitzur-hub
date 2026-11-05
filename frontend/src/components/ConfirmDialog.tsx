@@ -3,6 +3,7 @@
  */
 import { Button, Group, Modal, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { dirOf } from "../lib/text";
 
 interface ConfirmDialogProps {
   opened: boolean;
@@ -31,7 +32,7 @@ export function ConfirmDialog({
   const { t } = useTranslation();
   return (
     <Modal opened={opened} onClose={onClose} title={title} centered>
-      <Text dir="auto">{message}</Text>
+      <Text dir={dirOf(message)}>{message}</Text>
       <Group justify="flex-end" mt="lg">
         <Button variant="default" onClick={onClose} data-autofocus>
           {t("common.cancel")}

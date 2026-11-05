@@ -30,7 +30,8 @@ The design, decisions and course requirements live in `docs/guide.html` (local p
 3. Every data view renders through `<QueryState>` (loading, error with retry, empty with a next step, content).
 4. Errors are turned into text only by `useErrorMessage`. Writes never retry automatically.
 5. No hard-coded UI text: every string is a key in `i18n/locales/he.ts`. Keys are type-checked.
-6. RTL: CSS logical properties only, `dir="auto"` on user text and transcript segments.
+6. RTL: CSS logical properties only. Displayed user text gets `dir={dirOf(text)}` (`lib/text.ts`), not
+   `dir="auto"`, because mixed Hebrew/English strings starting with English render backwards. Inputs keep `dir="auto"`.
 7. User text is rendered as text. `dangerouslySetInnerHTML` is a lint error.
 8. After any backend API change: `uv run python -m scripts.export_openapi` (backend/), then `npm run gen:api` (frontend/).
 

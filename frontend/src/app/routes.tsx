@@ -5,6 +5,8 @@ import { Navigate, type RouteObject } from "react-router";
 import { COURSE_TABS, ROUTE_PATTERNS } from "../config/constants";
 import { CourseLayout } from "../pages/CourseLayout";
 import { CoursesPage } from "../pages/CoursesPage";
+import { LecturePage } from "../pages/LecturePage";
+import { LecturesTab } from "../pages/LecturesTab";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { TasksTab } from "../pages/TasksTab";
 import { Layout } from "./Layout";
@@ -19,10 +21,12 @@ export const routes: RouteObject[] = [
         element: <CourseLayout />,
         children: [
           { index: true, element: <Navigate to={COURSE_TABS[0]} replace /> },
+          { path: "lectures", element: <LecturesTab /> },
           { path: "tasks", element: <TasksTab /> },
           { path: "*", element: <NotFoundPage /> },
         ],
       },
+      { path: ROUTE_PATTERNS.lecture, element: <LecturePage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

@@ -23,9 +23,9 @@ function serveCourse(tasks: Task[]) {
 }
 
 describe("Course page and Tasks tab", () => {
-  it("redirects the course URL to its first tab and lists tasks", async () => {
+  it("lists tasks with their weight", async () => {
     serveCourse([TASK]);
-    renderRoute("/courses/1");
+    renderRoute("/courses/1/tasks");
     expect(await screen.findByText(TASK.title)).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "משימות" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("20% מהציון")).toBeInTheDocument();

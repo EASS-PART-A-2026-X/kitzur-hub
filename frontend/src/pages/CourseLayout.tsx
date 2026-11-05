@@ -15,6 +15,7 @@ import { type CourseOutletContext, useCourseId } from "../hooks/useCourseRoute";
 import { useCourse, useDeleteCourse } from "../hooks/useCourses";
 import { useNotify } from "../hooks/useNotify";
 import { formatLocal } from "../lib/dates";
+import { dirOf } from "../lib/text";
 import { NotFoundPage } from "./NotFoundPage";
 
 /**
@@ -78,10 +79,10 @@ function CourseFrame({ course }: { course: Course }) {
       <Group justify="space-between" align="flex-start">
         <Stack gap={4}>
           <Group gap="sm">
-            <Title order={2} dir="auto">
+            <Title order={2} dir={dirOf(course.name)}>
               {course.name}
             </Title>
-            <Badge variant="outline" dir="auto">
+            <Badge variant="outline" dir={dirOf(course.code)}>
               {course.code}
             </Badge>
           </Group>

@@ -19,6 +19,9 @@ window.matchMedia ??= (query: string) =>
     dispatchEvent: () => false,
   }) as MediaQueryList;
 
+// jsdom has no layout, so Mantine's combobox cannot scroll options into view.
+Element.prototype.scrollIntoView ??= () => {};
+
 globalThis.ResizeObserver ??= class {
   /** No-op: layout is not measured in jsdom. */
   observe() {}

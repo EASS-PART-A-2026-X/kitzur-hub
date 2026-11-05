@@ -15,3 +15,8 @@ export type TaskCreate = Schemas["TaskCreate"];
 export type TaskUpdate = Schemas["TaskUpdate"];
 export type TaskKind = Schemas["TaskKind"];
 export type TaskStatus = Schemas["TaskStatus"];
+
+export type Lecture = Schemas["LecturePublic"];
+export type LectureDetail = Schemas["LectureDetail"];
+export type LectureUpdate = Schemas["LectureUpdate"];
+export type Segment = Schemas["Segment"];

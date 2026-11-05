@@ -7,6 +7,7 @@ import { Link } from "react-router";
 import type { Course } from "../api/types";
 import { ROUTES } from "../config/constants";
 import { formatLocal } from "../lib/dates";
+import { dirOf } from "../lib/text";
 import { DaysLeftBadge } from "./DaysLeftBadge";
 
 /**
@@ -28,10 +29,10 @@ export function CourseCard({ course }: { course: Course }) {
     >
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap">
-          <Text fw={600} dir="auto" lineClamp={2}>
+          <Text fw={600} dir={dirOf(course.name)} lineClamp={2}>
             {course.name}
           </Text>
-          <Badge variant="outline" dir="auto" style={{ flexShrink: 0 }}>
+          <Badge variant="outline" dir={dirOf(course.code)} style={{ flexShrink: 0 }}>
             {course.code}
           </Badge>
         </Group>

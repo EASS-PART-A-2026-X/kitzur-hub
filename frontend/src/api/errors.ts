@@ -6,6 +6,7 @@
 /** What went wrong, from the user's point of view. */
 export type ApiErrorKind =
   | "validation"
+  | "unprocessable"
   | "not_found"
   | "conflict"
   | "too_large"
@@ -97,8 +98,14 @@ export function fromResponse(status: number, body: unknown): ApiError {
     typeof body === "object" && body !== null && "detail" in body
       ? (body as { detail: unknown }).detail
       : body;
-  const kind = KIND_BY_STATUS[status] ?? "server";
-  return new ApiError(kind, status, detail, kind === "validation" ? parseFieldErrors(detail) : []);
+  const fieldErrors = status === 422 ? parseFieldErrors(detail) : [];
+  // A 422 without field errors is a business rule ("no transcript in this file"),
+  // not a form mistake, so it gets its own message.
+  const kind =
+    status === 422 && fieldErrors.length === 0
+      ? "unprocessable"
+      : (KIND_BY_STATUS[status] ?? "server");
+  return new ApiError(kind, status, detail, fieldErrors);
 }
 
 /**

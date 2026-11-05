@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import type { Task, TaskStatus } from "../api/types";
 import { TASK_STATUSES } from "../config/constants";
 import { formatLocal } from "../lib/dates";
+import { dirOf } from "../lib/text";
 import { DaysLeftBadge } from "./DaysLeftBadge";
 
 interface TaskRowProps {
@@ -33,7 +34,7 @@ export function TaskRow({ task, busy = false, onStatusChange, onEdit, onDelete }
       <Group justify="space-between" align="flex-start" gap="xs">
         <Stack gap={4}>
           <Group gap="xs">
-            <Text fw={500} dir="auto" td={done ? "line-through" : undefined}>
+            <Text fw={500} dir={dirOf(task.title)} td={done ? "line-through" : undefined}>
               {task.title}
             </Text>
             <Badge variant="light" size="sm">
