@@ -7,7 +7,9 @@ import { CourseLayout } from "../pages/CourseLayout";
 import { CoursesPage } from "../pages/CoursesPage";
 import { LecturePage } from "../pages/LecturePage";
 import { LecturesTab } from "../pages/LecturesTab";
+import { MaterialsTab } from "../pages/MaterialsTab";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { PracticeTab } from "../pages/PracticeTab";
 import { TasksTab } from "../pages/TasksTab";
 import { Layout } from "./Layout";
 
@@ -23,6 +25,8 @@ export const routes: RouteObject[] = [
           { index: true, element: <Navigate to={COURSE_TABS[0]} replace /> },
           { path: "lectures", element: <LecturesTab /> },
           { path: "tasks", element: <TasksTab /> },
+          { path: "materials", element: <MaterialsTab /> },
+          { path: "practice", element: <PracticeTab /> },
           { path: "*", element: <NotFoundPage /> },
         ],
       },

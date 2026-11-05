@@ -46,10 +46,18 @@ export const FIELD_LIMITS = {
 } as const;
 
 /** Course page tabs, in display order. The first one is the default. */
-export const COURSE_TABS = ["lectures", "tasks"] as const;
+export const COURSE_TABS = ["lectures", "tasks", "materials", "practice"] as const;
 
 /** One tab of the course page. */
 export type CourseTab = (typeof COURSE_TABS)[number];
+
+/** Course material kinds and accepted files. Mirrors backend MaterialKind / EXTRACTORS. */
+export const MATERIAL_KINDS = ["syllabus", "past_exam"] as const;
+export const MATERIAL_EXTENSIONS = [".pdf", ".txt", ".md"] as const;
+
+/** Practice session sizes offered to the user. Backend allows 1..50. */
+export const PRACTICE_COUNTS = [5, 10, 20] as const;
+export const DEFAULT_PRACTICE_COUNT = 10;
 
 /** Task kinds and statuses, in display order. Mirrors backend TaskKind / TaskStatus. */
 export const TASK_KINDS = ["hw", "project", "exam", "quiz", "other"] as const;

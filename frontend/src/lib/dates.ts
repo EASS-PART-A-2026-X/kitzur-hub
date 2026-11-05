@@ -67,3 +67,16 @@ export function toDateTimeInput(local: string | null | undefined): string {
 export function fromInput(value: string): string | null {
   return value.trim() === "" ? null : value;
 }
+
+/**
+ * Format a real instant (with a time zone, e.g. a server timestamp) as an Israeli date.
+ *
+ * @param iso ISO timestamp with an offset or "Z".
+ * @param language UI language code.
+ * @returns A localized date.
+ */
+export function formatInstantDate(iso: string, language: string): string {
+  return new Intl.DateTimeFormat(language, { timeZone: TIME_ZONE, dateStyle: "medium" }).format(
+    new Date(iso),
+  );
+}
