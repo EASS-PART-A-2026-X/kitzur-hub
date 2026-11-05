@@ -450,7 +450,7 @@ export interface components {
         };
         /**
          * CoursePublic
-         * @description Course as returned by the API.
+         * @description Course as returned by the API, with counts for course cards.
          */
         CoursePublic: {
             /** Name */
@@ -463,6 +463,18 @@ export interface components {
             exam_date?: string | null;
             /** Id */
             id: number;
+            /**
+             * Lecture Count
+             * @default 0
+             */
+            lecture_count: number;
+            /**
+             * Open Task Count
+             * @default 0
+             */
+            open_task_count: number;
+            /** Next Due At */
+            next_due_at?: string | null;
         };
         /**
          * CourseUpdate

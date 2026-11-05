@@ -144,9 +144,12 @@ class CourseUpdate(UpdateSchema):
 
 
 class CoursePublic(CourseBase):
-    """Course as returned by the API."""
+    """Course as returned by the API, with counts for course cards."""
 
     id: int
+    lecture_count: int = 0
+    open_task_count: int = 0
+    next_due_at: NaiveDatetime | None = None
 
 
 # Lecture

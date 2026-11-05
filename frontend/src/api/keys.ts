@@ -8,4 +8,10 @@ export const queryKeys = {
     list: () => [...queryKeys.courses.all, "list"] as const,
     detail: (courseId: number) => [...queryKeys.courses.all, "detail", courseId] as const,
   },
+  tasks: {
+    all: ["tasks"] as const,
+    byCourse: (courseId: number) => [...queryKeys.tasks.all, courseId] as const,
+    list: (courseId: number, status: string | null) =>
+      [...queryKeys.tasks.byCourse(courseId), status ?? "all"] as const,
+  },
 } as const;

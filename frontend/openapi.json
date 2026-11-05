@@ -1667,6 +1667,28 @@
           "id": {
             "type": "integer",
             "title": "Id"
+          },
+          "lecture_count": {
+            "type": "integer",
+            "title": "Lecture Count",
+            "default": 0
+          },
+          "open_task_count": {
+            "type": "integer",
+            "title": "Open Task Count",
+            "default": 0
+          },
+          "next_due_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Due At"
           }
         },
         "type": "object",
@@ -1677,7 +1699,7 @@
           "id"
         ],
         "title": "CoursePublic",
-        "description": "Course as returned by the API."
+        "description": "Course as returned by the API, with counts for course cards."
       },
       "CourseUpdate": {
         "properties": {

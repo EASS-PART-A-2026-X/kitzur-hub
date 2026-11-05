@@ -36,8 +36,37 @@ export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 /** Language used on first load. */
 export const DEFAULT_LANGUAGE: Language = "he";
 
-/** Route paths, built in one place so links and the router cannot drift apart. */
+/** Field length limits. Mirrors backend models.py (client-side checks only; the server decides). */
+export const FIELD_LIMITS = {
+  courseName: 80,
+  courseCode: 20,
+  courseSemester: 20,
+  taskTitle: 200,
+  lectureTitle: 200,
+} as const;
+
+/** Course page tabs, in display order. The first one is the default. */
+export const COURSE_TABS = ["tasks"] as const;
+
+/** One tab of the course page. */
+export type CourseTab = (typeof COURSE_TABS)[number];
+
+/** Task kinds and statuses, in display order. Mirrors backend TaskKind / TaskStatus. */
+export const TASK_KINDS = ["hw", "project", "exam", "quiz", "other"] as const;
+export const TASK_STATUSES = ["todo", "doing", "done"] as const;
+
+/** How long a success toast stays on screen. */
+export const TOAST_MS = 3000;
+
+/** Route patterns for the router. */
+export const ROUTE_PATTERNS = {
+  courses: "/",
+  course: "/courses/:courseId",
+} as const;
+
+/** Route builders for links, so links and the router cannot drift apart. */
 export const ROUTES = {
   courses: "/",
   course: (courseId: number) => `/courses/${courseId}`,
+  courseTab: (courseId: number, tab: CourseTab) => `/courses/${courseId}/${tab}`,
 } as const;
