@@ -34,7 +34,6 @@ describe("fromResponse", () => {
     [413, "too_large"],
     [415, "unsupported"],
     [500, "server"],
-    [502, "server"],
   ])("maps %i to %s", (status, kind) => {
     expect(fromResponse(status, { detail: "x" }).kind).toBe(kind);
   });
@@ -45,6 +44,22 @@ describe("422 without field errors", () => {
     const error = fromResponse(422, { detail: "the file contains no transcript text" });
     expect(error.kind).toBe("unprocessable");
     expect(error.fieldErrors).toEqual([]);
+  });
+});
+
+describe("gateway errors from the proxy", () => {
+  it("treats a proxy 502/503 (no JSON detail) as the backend being unreachable", () => {
+    expect(fromResponse(502, "<html>Bad Gateway</html>").kind).toBe("unreachable");
+    expect(fromResponse(503, undefined, "POST").kind).toBe("unreachable");
+  });
+
+  it("treats a proxy timeout on a write as an unknown outcome", () => {
+    expect(fromResponse(504, "<html>Gateway Timeout</html>", "GET").kind).toBe("unreachable");
+    expect(fromResponse(504, "<html>Gateway Timeout</html>", "PATCH").kind).toBe("unknown_outcome");
+  });
+
+  it("keeps a backend's own 502 (JSON detail) as a server error", () => {
+    expect(fromResponse(502, { detail: "AI returned invalid data" }).kind).toBe("server");
   });
 });
 

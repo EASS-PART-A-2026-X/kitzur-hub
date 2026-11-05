@@ -49,7 +49,7 @@ export async function request<T>(
     throw fromNetworkFailure(method, cause);
   }
   if (!result.response.ok) {
-    throw fromResponse(result.response.status, result.error);
+    throw fromResponse(result.response.status, result.error, method);
   }
   return result.data as T;
 }

@@ -1,0 +1,28 @@
+# Kitzur Hub: backend (FastAPI + SQLite) and frontend (React behind nginx).
+# Start: docker compose up --build --wait   then open http://localhost:8501
+name: kitzur-hub
+
+services:
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/app.db}
+    volumes:
+      - backend-data:/app/data
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8501}:8080"
+    depends_on:
+      # nginx resolves "backend" at startup, so wait until the API answers /health.
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  # Survives "docker compose down"; "docker compose down -v" deletes it and the seed runs again.
+  backend-data:

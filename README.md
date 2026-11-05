@@ -4,7 +4,7 @@ A study hub for one university course: import lecture transcripts, track deadlin
 
 EASS course project, HIT, semester A 2026-27. Repository: `EASS-PART-A-2026-X/kitzur-hub`.
 
-> **Status: EX1 (backend).** The frontend arrives in EX2 and the AI service in EX3.
+> **Status: EX2 (frontend + backend).** The AI service arrives in EX3.
 
 ## Product sketch
 
@@ -37,36 +37,46 @@ browser -> frontend (React, :8501) -> backend (FastAPI, :8000) -> SQLite (backen
 
 ## Run
 
-Requirements: [uv](https://docs.astral.sh/uv/) (installs Python 3.14 itself) and Docker Desktop.
+Requirements: Docker Desktop. For local development also [uv](https://docs.astral.sh/uv/) (installs Python 3.14 itself) and Node.js 22.
 
-### Locally
+### With Docker Compose (recommended)
 
 ```bash
-cd backend
-uv sync
-uv run fastapi dev            # http://localhost:8000, API docs at /docs
+docker compose up --build --wait     # both services healthy
+open http://localhost:8501           # the app; the API is also on http://localhost:8000
+```
+
+- **Data** lives in the `backend-data` volume. `docker compose down` keeps it; `docker compose down -v` deletes it, and the seed runs again on the next start.
+- **Ports** can be changed with `FRONTEND_PORT` and `BACKEND_PORT` (see `.env.example`).
+- **How the browser reaches the API:** nginx in the frontend container serves the app and forwards `/api/*` to the backend, so the browser only ever talks to one origin (no CORS).
+
+### Locally (two terminals)
+
+```bash
+cd backend && uv sync && uv run fastapi dev    # API on http://localhost:8000, docs at /docs
+cd frontend && npm ci && npm run dev           # app on http://localhost:5173 (proxies /api to :8000)
 ```
 
 The database is created at `backend/data/app.db` and seeded on first start with the EASS course itself: its first two real lectures (anonymized), 12 practice questions and its four deadlines.
 
-### With Docker
+### Backend container alone
 
 ```bash
 cd backend
 docker build -t kitzur-hub-backend .
 docker run -d --name backend -p 127.0.0.1:8000:8000 -v backend-data:/app/data kitzur-hub-backend
-curl localhost:8000/health    # {"status":"ok"}
 ```
-
-Data lives in the `backend-data` volume and survives `docker rm -f backend` plus a new `docker run`. Deleting the volume (`docker volume rm backend-data`) resets to the seed.
 
 ### Configuration
 
-| Variable       | Default                                                          | Meaning                        |
-| -------------- | ---------------------------------------------------------------- | ------------------------------ |
+| Variable | Default | Meaning |
+| --- | --- | --- |
 | `DATABASE_URL` | `sqlite:///./data/app.db` (Docker: `sqlite:////app/data/app.db`) | SQLAlchemy URL of the database |
+| `BACKEND_PORT` | `8000` | Host port of the API in Compose |
+| `FRONTEND_PORT` | `8501` | Host port of the app in Compose |
+| `BACKEND_URL` | `http://localhost:8000` | Where the Vite dev server proxies `/api` (local development only) |
 
-All settings are listed in [`.env.example`](.env.example). No secrets are needed for EX1.
+All settings are listed in [`.env.example`](.env.example). No secrets are needed for EX2.
 
 ## Test
 
@@ -159,6 +169,7 @@ Syllabus and past exams (`kind`: `syllabus` or `past_exam`) are stored as extrac
 
 ### Manual checks
 
+API (from the repo root, stack running):
 ```bash
 curl -s -F file=@samples/lecture-03.transcript.md localhost:8000/courses/1/lectures/import   # 201
 curl -s -o /dev/null -w "%{http_code}\n" -F file=@samples/lecture-03.transcript.md localhost:8000/courses/1/lectures/import  # 409
@@ -166,11 +177,25 @@ curl -s -o /dev/null -w "%{http_code}\n" localhost:8000/courses/999             
 curl -s -o /dev/null -w "%{http_code}\n" --json '{"name": ""}' localhost:8000/courses       # 422
 ```
 
+Browser (http://localhost:8501), with what the user sees:
+
+| Check | Expected |
+| --- | --- |
+| Create a course with an empty name | "שדה חובה." under each required field, no request sent |
+| Drop `samples/lecture-03.transcript.md` on the Lectures tab, reload | The lecture is still listed |
+| Drop the same file again | "הפריט כבר קיים." with a link to the existing lecture |
+| Drop `samples/eass-syllabus.md` on the Lectures tab | "לא הצלחנו לעבד את התוכן..." (it is not a transcript) |
+| `docker compose stop backend`, then reload | "השרת לא זמין כרגע. בדקו שהוא רץ ונסו שוב." with a retry button, no stack trace |
+| `docker compose start backend`, then press retry | The page loads again with all data |
+| Practice: answer a multiple choice question | The correct option turns green, the explanation appears |
+
 ## Repository layout
 
 ```text
-backend/        FastAPI app (app/), tests/, scripts/ (anonymizer), Dockerfile, pyproject.toml, uv.lock
-samples/        synthetic transcripts for upload demos
+backend/        FastAPI app (app/), tests/, scripts/ (anonymizer, OpenAPI export), Dockerfile, uv.lock
+frontend/       React app (src/), tests/ (Vitest), e2e/ (Playwright), Dockerfile, nginx.conf
+compose.yaml    backend + frontend with health checks and the data volume
+samples/        transcripts and a syllabus for upload demos
 scripts/        progress.py (tracker), check_no_em_dash.py (style check)
 AGENTS.md       rules for AI coding agents working in this repo
 ```
