@@ -197,7 +197,7 @@ frontend/       React app (src/), tests/ (Vitest), e2e/ (Playwright), Dockerfile
 compose.yaml    backend + frontend with health checks and the data volume
 samples/        transcripts and a syllabus for upload demos
 scripts/        progress.py (tracker), check_no_em_dash.py (style check)
-AGENTS.md       rules for AI coding agents working in this repo
+AGENTS.md       rules, workflow and lessons learned for AI coding agents working in this repo
 ```
 
 ## AI use
@@ -205,6 +205,7 @@ AGENTS.md       rules for AI coding agents working in this repo
 - **Tools:** Claude (Anthropic) Code, used as a pair programmer. Cursor (XSI) as an IDE a various of models usage.
 - **Help received:** it planned the stages with me and drafted the code and tests for each stage.
 - **Checks performed:** I reviewed each stage's code and design decisions. Every stage passed `pytest`, `ruff` and the style check before being marked done, and I ran the Docker verification on my own machine.
+- **EX2 checks:** component tests (Vitest), end-to-end browser tests (Playwright), Biome and the type checker on every stage, plus screenshots of each screen and deliberate "break it" runs to confirm the tests catch real bugs.
 - **Upstream work:** all maintainer-facing text in my open-source PRs was written by me.
 
 ## Open-source evidence

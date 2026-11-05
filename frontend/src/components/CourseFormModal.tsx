@@ -57,6 +57,7 @@ export function CourseFormModal({ opened, onClose, course, onSaved }: CourseForm
   const create = useCreateCourse();
   const update = useUpdateCourse(course?.id ?? 0);
   const saving = create.isPending || update.isPending;
+  /** Form rule: non-blank text, with the shared "required" message. */
   const required = (value: string) => (value.trim() ? null : t("validation.missing"));
 
   const form = useForm<CourseFormValues>({

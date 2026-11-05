@@ -16,7 +16,6 @@ interface FileDropZoneProps {
   onFiles: (files: File[]) => void;
   /** Files refused before upload (only size is checked locally). */
   onTooLarge: (names: string[]) => void;
-  disabled?: boolean;
 }
 
 /**
@@ -26,7 +25,7 @@ interface FileDropZoneProps {
  * @param props Texts and handlers.
  * @returns The drop zone.
  */
-export function FileDropZone({ title, hint, onFiles, onTooLarge, disabled }: FileDropZoneProps) {
+export function FileDropZone({ title, hint, onFiles, onTooLarge }: FileDropZoneProps) {
   const { t } = useTranslation();
   const openRef = useRef<() => void>(null);
   return (
@@ -36,7 +35,6 @@ export function FileDropZone({ title, hint, onFiles, onTooLarge, disabled }: Fil
       onReject={(rejections: FileRejection[]) => onTooLarge(rejections.map((r) => r.file.name))}
       maxSize={MAX_UPLOAD_BYTES}
       multiple
-      disabled={disabled}
       activateOnClick={false}
     >
       <Group justify="center" gap="lg" mih={110} style={{ pointerEvents: "none" }}>

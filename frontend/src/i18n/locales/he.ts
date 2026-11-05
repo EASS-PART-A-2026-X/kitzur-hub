@@ -15,7 +15,6 @@ const he = {
     create: "יצירה",
     edit: "עריכה",
     delete: "מחיקה",
-    actions: "פעולות",
   },
   courses: {
     title: "הקורסים שלי",

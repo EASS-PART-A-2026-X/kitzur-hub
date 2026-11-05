@@ -17,14 +17,3 @@ export function formatClock(totalSeconds: number): string {
     ? `${hours}:${String(minutes).padStart(2, "0")}:${seconds}`
     : `${minutes}:${seconds}`;
 }
-
-/**
- * Lower-case file extension including the dot.
- *
- * @param filename A file name.
- * @returns ".md", ".pdf", ..., or "" when there is none.
- */
-export function extensionOf(filename: string): string {
-  const dot = filename.lastIndexOf(".");
-  return dot > 0 ? filename.slice(dot).toLowerCase() : "";
-}

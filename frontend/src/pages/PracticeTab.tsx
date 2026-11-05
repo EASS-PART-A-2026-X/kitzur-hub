@@ -38,14 +38,20 @@ export function PracticeTab() {
   const session = usePracticeSession(course.id, options, round);
 
   if (round === null) {
+    // The lecture list is needed to choose a lecture, so it goes through the shared
+    // states; the totals are a bonus and are simply hidden if they fail to load.
     return (
-      <PracticeSetup
-        options={options}
-        onChange={setOptions}
-        onStart={() => setRound(Date.now())}
-        lectures={lectures.data ?? []}
-        summary={summary.data}
-      />
+      <QueryState query={lectures} skeletonRows={3}>
+        {(items) => (
+          <PracticeSetup
+            options={options}
+            onChange={setOptions}
+            onStart={() => setRound(Date.now())}
+            lectures={items}
+            summary={summary.data}
+          />
+        )}
+      </QueryState>
     );
   }
   return (
