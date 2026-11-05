@@ -269,10 +269,160 @@ export interface paths {
         patch: operations["update_material_materials__material_id__patch"];
         trace?: never;
     };
+    "/courses/{course_id}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Questions
+         * @description List a course's questions with their answers, for review.
+         */
+        get: operations["list_questions_courses__course_id__questions_get"];
+        put?: never;
+        /**
+         * Create Question
+         * @description Add a question to a course, optionally linked to one of its lectures.
+         */
+        post: operations["create_question_courses__course_id__questions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{course_id}/practice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Practice Session
+         * @description Pick questions for a practice session, least practiced first.
+         *
+         *     Developer note: ordering by attempt count and then random() means a new
+         *     session covers unseen questions before repeating any, while ties are
+         *     shuffled so two sessions do not look identical.
+         */
+        get: operations["practice_session_courses__course_id__practice_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{course_id}/practice/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Practice Summary
+         * @description Totals over every attempt in a course.
+         */
+        get: operations["practice_summary_courses__course_id__practice_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/questions/{question_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Question
+         * @description Return one question with its answer.
+         */
+        get: operations["read_question_questions__question_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Question
+         * @description Delete a question and its attempts.
+         */
+        delete: operations["delete_question_questions__question_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/questions/{question_id}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Answer Question
+         * @description Grade and store one answer, then reveal the solution.
+         *
+         *     Multiple choice is graded by the server against ``correct_index``; a
+         *     flashcard is self-graded with ``knew``.
+         *
+         *     Raises:
+         *         HTTPException: 404 unknown question, 422 if the body does not match
+         *             the question type.
+         */
+        post: operations["answer_question_questions__question_id__attempts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AttemptCreate
+         * @description POST /questions/{id}/attempts body.
+         *
+         *     Send ``chosen_index`` for multiple choice, or ``knew`` (self-graded) for a
+         *     flashcard. The endpoint checks that the right one was sent.
+         */
+        AttemptCreate: {
+            /** Chosen Index */
+            chosen_index?: number | null;
+            /** Knew */
+            knew?: boolean | null;
+        };
+        /**
+         * AttemptResult
+         * @description Graded attempt, revealing the solution.
+         */
+        AttemptResult: {
+            /** Id */
+            id: number;
+            /** Question Id */
+            question_id: number;
+            /** Correct */
+            correct: boolean;
+            /** Correct Index */
+            correct_index: number | null;
+            /** Explanation */
+            explanation: string | null;
+            /** Answer */
+            answer: string | null;
+        };
         /** Body_import_lecture_courses__course_id__lectures_import_post */
         Body_import_lecture_courses__course_id__lectures_import_post: {
             /** File */
@@ -454,6 +604,111 @@ export interface components {
             /** Filename */
             filename?: string | null;
         };
+        /**
+         * PracticeSummary
+         * @description Practice totals for a course.
+         */
+        PracticeSummary: {
+            /** Questions */
+            questions: number;
+            /** Attempted Questions */
+            attempted_questions: number;
+            /** Attempts */
+            attempts: number;
+            /** Correct Attempts */
+            correct_attempts: number;
+            /** Accuracy */
+            accuracy: number | null;
+        };
+        /**
+         * QuestionCreate
+         * @description POST /courses/{id}/questions body.
+         *
+         *     Multiple choice needs exactly 4 distinct options and ``correct_index``;
+         *     a flashcard needs ``answer`` and no options.
+         */
+        QuestionCreate: {
+            type: components["schemas"]["QuestionType"];
+            /** Prompt */
+            prompt: string;
+            /** Lecture Id */
+            lecture_id?: number | null;
+            /** Options */
+            options?: string[];
+            /** Correct Index */
+            correct_index?: number | null;
+            /** Answer */
+            answer?: string | null;
+            /** Explanation */
+            explanation?: string | null;
+            /** Source Quote */
+            source_quote?: string | null;
+        };
+        /**
+         * QuestionDetail
+         * @description Question with everything, for review and editing.
+         */
+        QuestionDetail: {
+            type: components["schemas"]["QuestionType"];
+            /** Prompt */
+            prompt: string;
+            /** Lecture Id */
+            lecture_id?: number | null;
+            /** Id */
+            id: number;
+            /** Course Id */
+            course_id: number;
+            /** Options */
+            options: string[];
+            /** Answer */
+            answer: string | null;
+            /**
+             * Attempt Count
+             * @default 0
+             */
+            attempt_count: number;
+            /** Correct Index */
+            correct_index: number | null;
+            /** Explanation */
+            explanation: string | null;
+            /** Source Quote */
+            source_quote: string | null;
+        };
+        /**
+         * QuestionPublic
+         * @description Question as shown while practising.
+         *
+         *     The correct option and explanation of a multiple choice question are left
+         *     out: the server grades the attempt and reveals them in the result. A
+         *     flashcard's answer is included because the student flips the card and
+         *     grades themselves.
+         */
+        QuestionPublic: {
+            type: components["schemas"]["QuestionType"];
+            /** Prompt */
+            prompt: string;
+            /** Lecture Id */
+            lecture_id?: number | null;
+            /** Id */
+            id: number;
+            /** Course Id */
+            course_id: number;
+            /** Options */
+            options: string[];
+            /** Answer */
+            answer: string | null;
+            /**
+             * Attempt Count
+             * @default 0
+             */
+            attempt_count: number;
+        };
+        /**
+         * QuestionType
+         * @description Practice question format.
+         * @enum {string}
+         */
+        QuestionType: "mcq" | "flashcard";
         /**
          * Segment
          * @description One transcript block after import: anonymized speaker plus text.
@@ -1274,6 +1529,238 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MaterialPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_questions_courses__course_id__questions_get: {
+        parameters: {
+            query?: {
+                lecture_id?: number | null;
+                type?: components["schemas"]["QuestionType"] | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                course_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionDetail"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_question_courses__course_id__questions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    practice_session_courses__course_id__practice_get: {
+        parameters: {
+            query?: {
+                count?: number;
+                lecture_id?: number | null;
+                type?: components["schemas"]["QuestionType"] | null;
+            };
+            header?: never;
+            path: {
+                course_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionPublic"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    practice_summary_courses__course_id__practice_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_question_questions__question_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                question_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_question_questions__question_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                question_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    answer_question_questions__question_id__attempts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                question_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttemptCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttemptResult"];
                 };
             };
             /** @description Validation Error */

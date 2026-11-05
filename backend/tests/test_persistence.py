@@ -33,3 +33,6 @@ def test_seed_imports_demo_lectures(db_url: str) -> None:
         assert [lec["held_on"] for lec in lectures] == ["2026-10-19", "2026-10-26"]
         detail = client.get(f"/lectures/{lectures[0]['id']}").json()
         assert {seg["speaker"] for seg in detail["segments"]} == {"מרצה", "סטודנט/ית"}
+        questions = client.get(f"/courses/{course['id']}/questions").json()
+        assert len(questions) == 12
+        assert {q["lecture_id"] for q in questions} == {lec["id"] for lec in lectures}

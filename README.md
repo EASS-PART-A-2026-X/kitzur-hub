@@ -47,7 +47,7 @@ uv sync
 uv run fastapi dev            # http://localhost:8000, API docs at /docs
 ```
 
-The database is created at `backend/data/app.db` and seeded on first start with the EASS course itself: its first two real lectures (anonymized) and its four deadlines.
+The database is created at `backend/data/app.db` and seeded on first start with the EASS course itself: its first two real lectures (anonymized), 12 practice questions and its four deadlines.
 
 ### With Docker
 
@@ -105,6 +105,13 @@ Lists accept `limit` (1-100, default 50) and `offset`. Request bodies reject unk
 - **Real transcripts in this repo** (`backend/app/seed_data/`) went through `backend/scripts/anonymize_transcript.py`: speakers become roles, and every participant name in the text, e-mail address and phone number is replaced by a placeholder. Raw files stay in the gitignored `private/` folder.
 - **Duplicates:** the same transcript uploaded twice to one course returns 409 with the existing `lecture_id`.
 - **Limits:** files are capped at 5 MB and 300,000 characters.
+
+### Practice questions
+
+- **Types:** multiple choice (exactly 4 distinct options plus `correct_index`) or a flashcard (`answer`). A question may belong to a lecture or to the whole course.
+- **Practice sessions** serve the least practiced questions first, with random order among ties. They hide the correct option and explanation of multiple choice questions.
+- **Attempts** are graded by the server: send `chosen_index` for multiple choice, or `knew` (self-graded) for a flashcard. The response reveals the solution.
+- **Seed:** the demo course ships with 12 hand-written questions on its two lectures. From EX3 the AI service generates them.
 
 ### Course materials
 

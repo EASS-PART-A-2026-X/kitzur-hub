@@ -1,5 +1,6 @@
 """Idempotent demo data for a fresh database: the EASS course itself."""
 
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -7,12 +8,15 @@ from sqlalchemy import Engine
 from sqlmodel import Session, select
 
 from app.importers import build_lecture
-from app.models import Course, CourseCreate, Task, TaskCreate, TaskKind
+from app.models import Course, CourseCreate, Question, QuestionCreate, Task, TaskCreate, TaskKind
 
 SEED_DIR = Path(__file__).parent / "seed_data"
 
 # Real EASS lectures, anonymized with scripts/anonymize_transcript.py.
 DEMO_LECTURES = ("eass-lecture-01.transcript.md", "eass-lecture-02.transcript.md")
+
+# Hand-written practice questions; "lecture" is a 1-based index into DEMO_LECTURES.
+DEMO_QUESTIONS = SEED_DIR / "eass-questions.json"
 
 DEMO_COURSE = CourseCreate(
     name="Engineering of Advanced Software Solutions",
@@ -39,7 +43,7 @@ DEMO_TASKS = [
 
 
 def seed(engine: Engine) -> bool:
-    """Insert the demo course, lectures and tasks if the database has no courses.
+    """Insert the demo course, lectures, questions and tasks if the database has no courses.
 
     Data goes through the Create schemas above, so the seed obeys the same limits
     as API input. Running it twice changes nothing.
@@ -56,8 +60,15 @@ def seed(engine: Engine) -> bool:
         course = Course.model_validate(DEMO_COURSE)
         session.add(course)
         session.flush()  # assigns course.id for the tasks below
-        for name in DEMO_LECTURES:
-            session.add(build_lecture(course.id, name, (SEED_DIR / name).read_bytes()))
+        lectures = [
+            build_lecture(course.id, name, (SEED_DIR / name).read_bytes()) for name in DEMO_LECTURES
+        ]
+        session.add_all(lectures)
+        session.flush()  # assigns lecture ids for the questions below
+        for item in json.loads(DEMO_QUESTIONS.read_text(encoding="utf-8")):
+            lecture_id = lectures[item.pop("lecture") - 1].id
+            body = QuestionCreate.model_validate({**item, "lecture_id": lecture_id})
+            session.add(Question.model_validate(body, update={"course_id": course.id}))
         for task in DEMO_TASKS:
             session.add(Task.model_validate(task, update={"course_id": course.id}))
         session.commit()

@@ -61,6 +61,13 @@ class MaterialKind(StrEnum):
     PAST_EXAM = "past_exam"
 
 
+class QuestionType(StrEnum):
+    """Practice question format."""
+
+    MCQ = "mcq"
+    FLASHCARD = "flashcard"
+
+
 class Speaker(StrEnum):
     """Anonymized speaker roles. Real names are never stored."""
 
@@ -116,6 +123,7 @@ class Course(CourseBase, table=True):
     lectures: list["Lecture"] = Relationship(cascade_delete=True)
     tasks: list["Task"] = Relationship(cascade_delete=True)
     materials: list["Material"] = Relationship(cascade_delete=True)
+    questions: list["Question"] = Relationship(cascade_delete=True)
 
 
 class CourseCreate(CourseBase):
@@ -313,3 +321,148 @@ class MaterialDetail(MaterialPublic):
     """Material in single-item responses, including the extracted text."""
 
     text: str
+
+
+# Question and Attempt
+
+MCQ_OPTIONS = 4
+
+
+class QuestionBase(SQLModel):
+    """Fields every question has."""
+
+    type: QuestionType
+    prompt: str = Field(min_length=1, max_length=500)
+    lecture_id: int | None = None
+
+
+class Question(QuestionBase, table=True):
+    """A practice question: multiple choice (4 options) or a flashcard.
+
+    ``lecture_id`` is optional because EX3 also creates course-level questions
+    (for example from past exams) that belong to no single lecture.
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    course_id: int = Field(foreign_key="course.id", index=True, ondelete="CASCADE")
+    lecture_id: int | None = Field(
+        default=None, foreign_key="lecture.id", index=True, ondelete="CASCADE"
+    )
+    options: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    correct_index: int | None = Field(default=None, ge=0, lt=MCQ_OPTIONS)
+    answer: str | None = Field(default=None, max_length=1500)
+    explanation: str | None = Field(default=None, max_length=1500)
+    source_quote: str | None = Field(default=None, max_length=300)
+    attempts: list["Attempt"] = Relationship(cascade_delete=True)
+
+
+class QuestionCreate(QuestionBase):
+    """POST /courses/{id}/questions body.
+
+    Multiple choice needs exactly 4 distinct options and ``correct_index``;
+    a flashcard needs ``answer`` and no options.
+    """
+
+    model_config = STRICT
+
+    options: list[str] = Field(default_factory=list, max_length=MCQ_OPTIONS)
+    correct_index: int | None = Field(default=None, ge=0, lt=MCQ_OPTIONS)
+    answer: str | None = Field(default=None, min_length=1, max_length=1500)
+    explanation: str | None = Field(default=None, min_length=1, max_length=1500)
+    source_quote: str | None = Field(default=None, min_length=1, max_length=300)
+
+    @model_validator(mode="after")
+    def check_shape(self) -> Self:
+        """Enforce the fields each question type needs.
+
+        Returns:
+            The validated model.
+
+        Raises:
+            ValueError: If the fields do not match the question type.
+        """
+        if self.type is QuestionType.MCQ:
+            cleaned = [option.strip() for option in self.options]
+            if len(cleaned) != MCQ_OPTIONS or not all(cleaned):
+                raise ValueError(f"multiple choice needs exactly {MCQ_OPTIONS} non-empty options")
+            if any(len(option) > 300 for option in cleaned):
+                raise ValueError("options are limited to 300 characters")
+            if len(set(cleaned)) != MCQ_OPTIONS:
+                raise ValueError("options must be distinct")
+            if self.correct_index is None:
+                raise ValueError("multiple choice needs correct_index")
+            self.options = cleaned
+        else:
+            if self.options or self.correct_index is not None:
+                raise ValueError("a flashcard has no options or correct_index")
+            if self.answer is None:
+                raise ValueError("a flashcard needs an answer")
+        return self
+
+
+class QuestionPublic(QuestionBase):
+    """Question as shown while practising.
+
+    The correct option and explanation of a multiple choice question are left
+    out: the server grades the attempt and reveals them in the result. A
+    flashcard's answer is included because the student flips the card and
+    grades themselves.
+    """
+
+    id: int
+    course_id: int
+    options: list[str]
+    answer: str | None
+    attempt_count: int = 0
+
+
+class QuestionDetail(QuestionPublic):
+    """Question with everything, for review and editing."""
+
+    correct_index: int | None
+    explanation: str | None
+    source_quote: str | None
+
+
+class Attempt(SQLModel, table=True):
+    """One answer to one question."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    question_id: int = Field(foreign_key="question.id", index=True, ondelete="CASCADE")
+    correct: bool
+    chosen_index: int | None = Field(default=None, ge=0, lt=MCQ_OPTIONS)
+    answered_at: datetime
+
+
+class AttemptCreate(SQLModel):
+    """POST /questions/{id}/attempts body.
+
+    Send ``chosen_index`` for multiple choice, or ``knew`` (self-graded) for a
+    flashcard. The endpoint checks that the right one was sent.
+    """
+
+    model_config = STRICT
+
+    chosen_index: int | None = Field(default=None, ge=0, lt=MCQ_OPTIONS)
+    knew: bool | None = None
+
+
+class AttemptResult(SQLModel):
+    """Graded attempt, revealing the solution."""
+
+    id: int
+    question_id: int
+    correct: bool
+    correct_index: int | None
+    explanation: str | None
+    answer: str | None
+
+
+class PracticeSummary(SQLModel):
+    """Practice totals for a course."""
+
+    questions: int
+    attempted_questions: int
+    attempts: int
+    correct_attempts: int
+    accuracy: float | None
