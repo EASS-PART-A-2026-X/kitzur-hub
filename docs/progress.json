@@ -1,0 +1,213 @@
+{
+ "updated": "2026-11-23",
+ "stages": [
+  {
+   "id": "1.1",
+   "phase": "EX1",
+   "title": "Scaffold: repo layout, AGENTS.md, tracking, backend uv project, /health",
+   "status": "done",
+   "agent": "claude",
+   "note": "Repo layout, AGENTS.md, progress tracker, backend uv project, /health + test"
+  },
+  {
+   "id": "1.2",
+   "phase": "EX1",
+   "title": "Models: Course, Lecture, Task tables + Create/Update/Public schemas",
+   "status": "done",
+   "agent": "claude",
+   "note": "3 tables + Create/Update/Public schemas, PATCH null rule, 11 tests"
+  },
+  {
+   "id": "1.3",
+   "phase": "EX1",
+   "title": "Persistence + CRUD: SQLite, lifespan, seed, routes, restart test",
+   "status": "done",
+   "agent": "claude",
+   "note": "SQLite engine factory, idempotent seed, CRUD for courses/lectures/tasks, restart test, 33 tests"
+  },
+  {
+   "id": "1.4",
+   "phase": "EX1",
+   "title": "Importers: kitzur md, Zoom JSON, vtt, txt, anonymization, import endpoint",
+   "status": "done",
+   "agent": "claude",
+   "note": "4 importers (md/json/vtt/txt), whitelist, anonymization, merge, import endpoint 201/409/413/415/422, seed lectures, 62 tests"
+  },
+  {
+   "id": "1.5",
+   "phase": "EX1",
+   "title": "Docker: Dockerfile, non-root, volume, survive rm + run",
+   "status": "done",
+   "agent": "gitam",
+   "note": "Verified on Mac: build OK, /health ok, import 201, data survives container replacement (3 lectures), uid=10001"
+  },
+  {
+   "id": "1.6",
+   "phase": "EX1",
+   "title": "Docs + verify: README, full EX1 verify block, submit",
+   "status": "done",
+   "agent": "claude",
+   "note": "README (sketch, run, test, API, AI use, OSS evidence); clean-copy verify: uv lock --check, 62 tests, ruff, em-dash. Waiting on 1.5 Docker check, then submit."
+  },
+  {
+   "id": "2.1",
+   "phase": "EX2",
+   "title": "Frontend scaffold: Vite, React, TS, Mantine, router, i18n, API client, QueryState",
+   "status": "done",
+   "agent": "claude",
+   "note": "Vite+React+TS, Mantine RTL, router, i18next (typed keys), API client + generated types, error model, QueryState, 16 tests, build OK"
+  },
+  {
+   "id": "2.2",
+   "phase": "EX2",
+   "title": "Backend: Material model, PDF/TXT/MD extraction, endpoints, tests",
+   "status": "done",
+   "agent": "claude",
+   "note": "Material model, pypdf extraction (mirrored-bracket fix, word-per-line join), 5 endpoints, 89 backend tests, OpenAPI + TS types regenerated"
+  },
+  {
+   "id": "2.3",
+   "phase": "EX2",
+   "title": "Backend: Question + Attempt, server-side grading, seeded EASS questions",
+   "status": "done",
+   "agent": "claude",
+   "note": "Question + Attempt, least-practiced practice sessions, server grading, summary, 12 seeded EASS questions, 104 backend tests"
+  },
+  {
+   "id": "2.4",
+   "phase": "EX2",
+   "title": "Courses page, course layout, Tasks tab (4 states)",
+   "status": "done",
+   "agent": "claude",
+   "note": "Course cards with counts (backend), course page with tabs, Tasks tab CRUD with inline status, days-left badges, 29 frontend tests, screenshots checked"
+  },
+  {
+   "id": "2.5",
+   "phase": "EX2",
+   "title": "Lectures tab: drop zone, list, transcript viewer with search and edit",
+   "status": "done",
+   "agent": "claude",
+   "note": "Drop zone with per-file results, lecture list, transcript viewer with search, edit, delete; RTL text fix"
+  },
+  {
+   "id": "2.6",
+   "phase": "EX2",
+   "title": "Materials tab + Practice tab",
+   "status": "done",
+   "agent": "claude",
+   "note": "Material upload by kind with text preview; practice sessions with server grading and a score"
+  },
+  {
+   "id": "2.7",
+   "phase": "EX2",
+   "title": "Tests: components + MSW, Playwright e2e, break-it checks",
+   "status": "done",
+   "agent": "claude",
+   "note": "3 e2e flows against a real backend; 8 guards proven by deliberately breaking them"
+  },
+  {
+   "id": "2.8",
+   "phase": "EX2",
+   "title": "Docker (nginx) + compose (2 services), README, clean-clone verify, submit",
+   "status": "done",
+   "agent": "claude",
+   "note": "nginx image with /api proxy, compose for both services, gateway errors shown as server unavailable"
+  },
+  {
+   "id": "2.9",
+   "phase": "EX2",
+   "title": "Code review, docstring audit, AGENTS.md / README / guide update, lessons learned",
+   "status": "done",
+   "agent": "claude",
+   "note": "JSDoc audit clean, dead code removed, practice setup via QueryState, AGENTS.md rewritten with lessons learned"
+  },
+  {
+   "id": "2.10",
+   "phase": "EX2",
+   "title": "Project system: docs/plan.md, decisions log, progress.json, Claude Code commands, no-attribution guard",
+   "status": "done",
+   "agent": "claude",
+   "note": "plan.md, decisions.md, progress.json, /stage /finish-stage /review commands, commit-msg guard"
+  },
+  {
+   "id": "3.1",
+   "phase": "EX3",
+   "title": "ai-service scaffold: FastAPI, Pydantic AI, AI_MODEL switch, offline tests",
+   "status": "todo",
+   "agent": "",
+   "note": ""
+  },
+  {
+   "id": "3.2",
+   "phase": "EX3",
+   "title": "Lecture summary agent with output validators",
+   "status": "todo",
+   "agent": "",
+   "note": ""
+  },
+  {
+   "id": "3.3",
+   "phase": "EX3",
+   "title": "Backend jobs: 202 + polling, idempotency, restart recovery, error mapping",
+   "status": "todo",
+   "agent": "",
+   "note": ""
+  },
+  {
+   "id": "3.4",
+   "phase": "EX3",
+   "title": "AI outputs as HTML documents (Jinja2), view and download",
+   "status": "todo",
+   "agent": "",
+   "note": ""
+  },
+  {
+   "id": "3.5",
+   "phase": "EX3",
+   "title": "Course analysis agent: deliverables, exam topics, suggested tasks",
+   "status": "todo",
+   "agent": "",
+   "note": ""
+  },
+  {
+   "id": "3.6",
+   "phase": "EX3",
+   "title": "Readiness report and dashboard",
+   "status": "todo",
+   "agent": "",
+   "note": ""
+  },
+  {
+   "id": "3.7",
+   "phase": "EX3",
+   "title": "Generated questions into Practice, linked to topics",
+   "status": "todo",
+   "agent": "",
+   "note": ""
+  },
+  {
+   "id": "3.8",
+   "phase": "EX3",
+   "title": "Evals: 10 synthetic Hebrew cases, dated results",
+   "status": "todo",
+   "agent": "",
+   "note": ""
+  },
+  {
+   "id": "3.9",
+   "phase": "EX3",
+   "title": "Compose with 3 services, failure drills, runbook",
+   "status": "todo",
+   "agent": "",
+   "note": ""
+  },
+  {
+   "id": "3.10",
+   "phase": "EX3",
+   "title": "CI, clean-checkout script, release candidate, rehearsal, v1.0.0",
+   "status": "todo",
+   "agent": "",
+   "note": ""
+  }
+ ]
+}

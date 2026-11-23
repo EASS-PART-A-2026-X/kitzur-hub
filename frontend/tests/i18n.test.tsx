@@ -12,7 +12,9 @@ import i18n from "../src/i18n";
 
 /** Wrap hooks in the app providers. */
 const wrapper = ({ children }: { children: ReactNode }) => (
-  <Providers queryClient={createQueryClient()}>{children}</Providers>
+  <Providers queryClient={createQueryClient()} env="test">
+    {children}
+  </Providers>
 );
 
 describe("i18n", () => {

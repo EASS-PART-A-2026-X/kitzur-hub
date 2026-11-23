@@ -49,9 +49,30 @@ export async function request<T>(
     throw fromNetworkFailure(method, cause);
   }
   if (!result.response.ok) {
-    throw fromResponse(result.response.status, result.error);
+    throw fromResponse(result.response.status, result.error, method);
   }
   return result.data as T;
+}
+
+/**
+ * Serialize upload fields as multipart/form-data.
+ *
+ * Developer note: the generated schema types file fields as `string` (OpenAPI's
+ * "binary" format), so upload hooks cast their `{ file: File }` body and pass
+ * this serializer. The browser then sets the multipart boundary itself.
+ *
+ * @param fields Field values: files or plain strings.
+ * @returns The form data to send.
+ */
+export function toFormData(fields: unknown): FormData {
+  const data = new FormData();
+  for (const [name, value] of Object.entries(fields as Record<string, Blob | string>)) {
+    // Pass the file name explicitly: some FormData implementations send "blob" otherwise,
+    // and the server picks the parser by file extension.
+    if (value instanceof Blob && "name" in value) data.append(name, value, String(value.name));
+    else data.append(name, value);
+  }
+  return data;
 }
 
 export { ApiError };

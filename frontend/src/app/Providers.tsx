@@ -12,19 +12,21 @@ import { theme } from "./theme";
 interface ProvidersProps {
   queryClient: QueryClient;
   children: ReactNode;
+  /** "test" turns off Mantine transitions and portals so tests see dialogs at once. */
+  env?: "default" | "test";
 }
 
 /**
  * Wrap the app (or a test) with all providers.
  *
- * @param props The query client to use and the content to render.
+ * @param props The query client, the content to render, and the environment.
  * @returns The wrapped tree.
  */
-export function Providers({ queryClient, children }: ProvidersProps) {
+export function Providers({ queryClient, children, env = "default" }: ProvidersProps) {
   return (
     <I18nextProvider i18n={i18n}>
       <DirectionProvider initialDirection={i18n.dir()}>
-        <MantineProvider theme={theme}>
+        <MantineProvider theme={theme} env={env}>
           <Notifications position="top-center" />
           <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
         </MantineProvider>

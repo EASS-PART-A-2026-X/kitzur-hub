@@ -1,17 +1,36 @@
 /**
- * Route table. Paths come from ROUTES so links and routes stay in sync.
+ * Route table. Patterns come from config/constants so links and routes stay in sync.
  */
-import type { RouteObject } from "react-router";
-import { ROUTES } from "../config/constants";
+import { Navigate, type RouteObject } from "react-router";
+import { COURSE_TABS, ROUTE_PATTERNS } from "../config/constants";
+import { CourseLayout } from "../pages/CourseLayout";
 import { CoursesPage } from "../pages/CoursesPage";
+import { LecturePage } from "../pages/LecturePage";
+import { LecturesTab } from "../pages/LecturesTab";
+import { MaterialsTab } from "../pages/MaterialsTab";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { PracticeTab } from "../pages/PracticeTab";
+import { TasksTab } from "../pages/TasksTab";
 import { Layout } from "./Layout";
 
 export const routes: RouteObject[] = [
   {
     element: <Layout />,
     children: [
-      { path: ROUTES.courses, element: <CoursesPage /> },
+      { path: ROUTE_PATTERNS.courses, element: <CoursesPage /> },
+      {
+        path: ROUTE_PATTERNS.course,
+        element: <CourseLayout />,
+        children: [
+          { index: true, element: <Navigate to={COURSE_TABS[0]} replace /> },
+          { path: "lectures", element: <LecturesTab /> },
+          { path: "tasks", element: <TasksTab /> },
+          { path: "materials", element: <MaterialsTab /> },
+          { path: "practice", element: <PracticeTab /> },
+          { path: "*", element: <NotFoundPage /> },
+        ],
+      },
+      { path: ROUTE_PATTERNS.lecture, element: <LecturePage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

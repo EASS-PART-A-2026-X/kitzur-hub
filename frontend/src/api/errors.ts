@@ -6,6 +6,7 @@
 /** What went wrong, from the user's point of view. */
 export type ApiErrorKind =
   | "validation"
+  | "unprocessable"
   | "not_found"
   | "conflict"
   | "too_large"
@@ -85,20 +86,38 @@ export function parseFieldErrors(detail: unknown): FieldError[] {
   });
 }
 
+/** Gateway statuses a proxy (nginx) sends when it could not get an answer from the backend. */
+const GATEWAY_STATUSES = new Set([502, 503, 504]);
+
 /**
  * Build an ApiError from a non-2xx response.
  *
+ * Developer note: behind nginx, a stopped backend shows up as a 502 with an
+ * HTML body instead of a network error. FastAPI always answers with a JSON
+ * `detail`, so a gateway status without one came from the proxy: the backend
+ * was not reached. For a 504 the request may have reached the backend before
+ * the proxy gave up, so a write gets "unknown_outcome" there, like a lost reply.
+ *
  * @param status HTTP status code.
  * @param body Parsed response body (FastAPI puts the reason in `detail`).
+ * @param method HTTP method of the request.
  * @returns The classified error.
  */
-export function fromResponse(status: number, body: unknown): ApiError {
-  const detail =
-    typeof body === "object" && body !== null && "detail" in body
-      ? (body as { detail: unknown }).detail
-      : body;
-  const kind = KIND_BY_STATUS[status] ?? "server";
-  return new ApiError(kind, status, detail, kind === "validation" ? parseFieldErrors(detail) : []);
+export function fromResponse(status: number, body: unknown, method = "GET"): ApiError {
+  const hasDetail = typeof body === "object" && body !== null && "detail" in body;
+  const detail = hasDetail ? (body as { detail: unknown }).detail : body;
+  if (GATEWAY_STATUSES.has(status) && !hasDetail) {
+    const maybeApplied = status === 504 && method !== "GET";
+    return new ApiError(maybeApplied ? "unknown_outcome" : "unreachable", status, null);
+  }
+  const fieldErrors = status === 422 ? parseFieldErrors(detail) : [];
+  // A 422 without field errors is a business rule ("no transcript in this file"),
+  // not a form mistake, so it gets its own message.
+  const kind =
+    status === 422 && fieldErrors.length === 0
+      ? "unprocessable"
+      : (KIND_BY_STATUS[status] ?? "server");
+  return new ApiError(kind, status, detail, fieldErrors);
 }
 
 /**

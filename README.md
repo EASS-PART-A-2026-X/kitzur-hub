@@ -4,7 +4,7 @@ A study hub for one university course: import lecture transcripts, track deadlin
 
 EASS course project, HIT, semester A 2026-27. Repository: `EASS-PART-A-2026-X/kitzur-hub`.
 
-> **Status: EX1 (backend).** The frontend arrives in EX2 and the AI service in EX3.
+> **Status: EX2 (frontend + backend).** The AI service arrives in EX3.
 
 ## Product sketch
 
@@ -37,45 +37,86 @@ browser -> frontend (React, :8501) -> backend (FastAPI, :8000) -> SQLite (backen
 
 ## Run
 
-Requirements: [uv](https://docs.astral.sh/uv/) (installs Python 3.14 itself) and Docker Desktop.
+Requirements: Docker Desktop. For local development also [uv](https://docs.astral.sh/uv/) (installs Python 3.14 itself) and Node.js 22.
 
-### Locally
+### With Docker Compose (recommended)
 
 ```bash
-cd backend
-uv sync
-uv run fastapi dev            # http://localhost:8000, API docs at /docs
+docker compose up --build --wait     # both services healthy
+open http://localhost:8501           # the app; the API is also on http://localhost:8000
 ```
 
-The database is created at `backend/data/app.db` and seeded on first start with the EASS course itself: its first two real lectures (anonymized) and its four deadlines.
+- **Data** lives in the `backend-data` volume. `docker compose down` keeps it; `docker compose down -v` deletes it, and the seed runs again on the next start.
+- **Ports** can be changed with `FRONTEND_PORT` and `BACKEND_PORT` (see `.env.example`).
+- **How the browser reaches the API:** nginx in the frontend container serves the app and forwards `/api/*` to the backend, so the browser only ever talks to one origin (no CORS).
 
-### With Docker
+### Locally (two terminals)
+
+```bash
+cd backend && uv sync && uv run fastapi dev    # API on http://localhost:8000, docs at /docs
+cd frontend && npm ci && npm run dev           # app on http://localhost:5173 (proxies /api to :8000)
+```
+
+The database is created at `backend/data/app.db` and seeded on first start with the EASS course itself: its first two real lectures (anonymized), 12 practice questions and its four deadlines.
+
+### Backend container alone
 
 ```bash
 cd backend
 docker build -t kitzur-hub-backend .
 docker run -d --name backend -p 127.0.0.1:8000:8000 -v backend-data:/app/data kitzur-hub-backend
-curl localhost:8000/health    # {"status":"ok"}
 ```
-
-Data lives in the `backend-data` volume and survives `docker rm -f backend` plus a new `docker run`. Deleting the volume (`docker volume rm backend-data`) resets to the seed.
 
 ### Configuration
 
-| Variable       | Default                                                          | Meaning                        |
-| -------------- | ---------------------------------------------------------------- | ------------------------------ |
+| Variable | Default | Meaning |
+| --- | --- | --- |
 | `DATABASE_URL` | `sqlite:///./data/app.db` (Docker: `sqlite:////app/data/app.db`) | SQLAlchemy URL of the database |
+| `BACKEND_PORT` | `8000` | Host port of the API in Compose |
+| `FRONTEND_PORT` | `8501` | Host port of the app in Compose |
+| `BACKEND_URL` | `http://localhost:8000` | Where the Vite dev server proxies `/api` (local development only) |
 
-All settings are listed in [`.env.example`](.env.example). No secrets are needed for EX1.
+All settings are listed in [`.env.example`](.env.example). No secrets are needed for EX2.
 
 ## Test
 
+### Backend
 ```bash
 cd backend
-uv run pytest                                 # 65 tests, each on its own temporary database
+uv run pytest                                 # each test uses its own temporary database
 uv run ruff check . && uv run ruff format --check .
 python3 ../scripts/check_no_em_dash.py        # repo style rule
 ```
+
+### Frontend
+```bash
+cd frontend
+npm ci
+npm test                    # component tests: Vitest + Testing Library, backend mocked with MSW
+npm run lint && npm run typecheck
+```
+
+### End to end (real browser, real backend)
+```bash
+cd frontend
+npx playwright install chromium   # once
+npm run e2e                       # starts a fresh backend (own SQLite file) and the dev server
+```
+`npm run e2e` replays the operational principle: create a course, drop `samples/lecture-03.transcript.md`, reload, open it and search it. It also adds, completes and deletes a task, and answers a graded practice question. To test a running stack instead (for example Docker Compose), set `E2E_BASE_URL=http://localhost:8501`.
+
+### Break it on purpose
+Each guard below was removed once to confirm that a test fails without it.
+
+| Guard | Test that fails |
+|---|---|
+| A write with no reply is "maybe saved", not "server down" (`api/errors.ts`) | `errors.test.ts`, `tasks-tab.test.tsx` |
+| Lists refresh after a write, even a failed one (`hooks/useTasks.ts`) | `tasks-tab.test.tsx` |
+| Server validation errors appear on the form field (`hooks/useServerErrors.ts`) | `courses-page.test.tsx` |
+| 404 and 422 are never retried (`app/queryClient.ts`) | `errors.test.ts` |
+| Deadlines use the Israeli calendar day (`lib/dates.ts`) | `dates.test.ts` |
+| Mixed Hebrew/English text renders right to left (`lib/text.ts`) | `text.test.ts` |
+| The server, not the client, grades answers (`routers/questions.py`) | `test_questions.py` |
+| Mirrored PDF brackets are fixed (`materials.py`) | `test_materials.py` |
 
 ## API
 
@@ -106,8 +147,29 @@ Lists accept `limit` (1-100, default 50) and `offset`. Request bodies reject unk
 - **Duplicates:** the same transcript uploaded twice to one course returns 409 with the existing `lecture_id`.
 - **Limits:** files are capped at 5 MB and 300,000 characters.
 
+### Practice questions
+
+- **Types:** multiple choice (exactly 4 distinct options plus `correct_index`) or a flashcard (`answer`). A question may belong to a lecture or to the whole course.
+- **Practice sessions** serve the least practiced questions first, with random order among ties. They hide the correct option and explanation of multiple choice questions.
+- **Attempts** are graded by the server: send `chosen_index` for multiple choice, or `knew` (self-graded) for a flashcard. The response reveals the solution.
+- **Seed:** the demo course ships with 12 hand-written questions on its two lectures. From EX3 the AI service generates them.
+
+### Course materials
+
+Syllabus and past exams (`kind`: `syllabus` or `past_exam`) are stored as extracted text; the file itself is not kept.
+
+| Extension | Handling |
+|---|---|
+| `.pdf` | Text layer via pypdf. Scanned (image-only) or password-protected PDFs return 422 |
+| `.txt`, `.md` | UTF-8 text |
+
+- **Hebrew PDFs:** right-to-left PDFs often extract with mirrored parentheses (`)טקסט(`); complete mirrored pairs are swapped back. Pages that come out one word per line are joined into paragraphs, and other pages keep their line breaks.
+- **Duplicates:** the same text uploaded twice to one course returns 409 with the existing `material_id`.
+- **Checking a real file:** `uv run python -m scripts.extract_material <file>` prints what would be stored.
+
 ### Manual checks
 
+API (from the repo root, stack running):
 ```bash
 curl -s -F file=@samples/lecture-03.transcript.md localhost:8000/courses/1/lectures/import   # 201
 curl -s -o /dev/null -w "%{http_code}\n" -F file=@samples/lecture-03.transcript.md localhost:8000/courses/1/lectures/import  # 409
@@ -115,20 +177,39 @@ curl -s -o /dev/null -w "%{http_code}\n" localhost:8000/courses/999             
 curl -s -o /dev/null -w "%{http_code}\n" --json '{"name": ""}' localhost:8000/courses       # 422
 ```
 
+Browser (http://localhost:8501), with what the user sees:
+
+| Check | Expected |
+| --- | --- |
+| Create a course with an empty name | "שדה חובה." under each required field, no request sent |
+| Drop `samples/lecture-03.transcript.md` on the Lectures tab, reload | The lecture is still listed |
+| Drop the same file again | "הפריט כבר קיים." with a link to the existing lecture |
+| Drop `samples/eass-syllabus.md` on the Lectures tab | "לא הצלחנו לעבד את התוכן..." (it is not a transcript) |
+| `docker compose stop backend`, then reload | "השרת לא זמין כרגע. בדקו שהוא רץ ונסו שוב." with a retry button, no stack trace |
+| `docker compose start backend`, then press retry | The page loads again with all data |
+| Practice: answer a multiple choice question | The correct option turns green, the explanation appears |
+
 ## Repository layout
 
 ```text
-backend/        FastAPI app (app/), tests/, scripts/ (anonymizer), Dockerfile, pyproject.toml, uv.lock
-samples/        synthetic transcripts for upload demos
-scripts/        progress.py (tracker), check_no_em_dash.py (style check)
-AGENTS.md       rules for AI coding agents working in this repo
+backend/        FastAPI app (app/), tests/, scripts/ (anonymizer, OpenAPI export), Dockerfile, uv.lock
+frontend/       React app (src/), tests/ (Vitest), e2e/ (Playwright), Dockerfile, nginx.conf
+compose.yaml    backend + frontend with health checks and the data volume
+samples/        transcripts and a syllabus for upload demos
+scripts/        progress.py (stage tracker), check_no_em_dash.py (style check), hooks/ (commit-msg guard)
+docs/           plan.md (what is left), decisions.md (decision log), progress.json (stage status)
+.claude/        Claude Code settings and commands (/stage, /finish-stage, /review)
+AGENTS.md       rules, workflow and lessons learned for AI coding agents working in this repo
 ```
+
+After cloning, enable the commit message guard once: `git config core.hooksPath scripts/hooks`.
 
 ## AI use
 
 - **Tools:** Claude (Anthropic) Code, used as a pair programmer. Cursor (XSI) as an IDE a various of models usage.
 - **Help received:** it planned the stages with me and drafted the code and tests for each stage.
 - **Checks performed:** I reviewed each stage's code and design decisions. Every stage passed `pytest`, `ruff` and the style check before being marked done, and I ran the Docker verification on my own machine.
+- **EX2 checks:** component tests (Vitest), end-to-end browser tests (Playwright), Biome and the type checker on every stage, plus screenshots of each screen and deliberate "break it" runs to confirm the tests catch real bugs.
 - **Upstream work:** all maintainer-facing text in my open-source PRs was written by me.
 
 ## Open-source evidence

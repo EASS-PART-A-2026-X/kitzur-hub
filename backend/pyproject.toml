@@ -5,6 +5,7 @@ description = "Kitzur Hub API: courses, lectures, tasks and transcript import."
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "fastapi[standard]>=0.162.0",
+    "pypdf>=6.21.4",
     "sqlmodel>=0.0.48",
 ]
 

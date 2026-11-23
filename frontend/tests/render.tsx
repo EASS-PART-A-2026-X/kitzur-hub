@@ -17,7 +17,7 @@ import { routes } from "../src/app/routes";
 export function renderRoute(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   return render(
-    <Providers queryClient={createQueryClient()}>
+    <Providers queryClient={createQueryClient()} env="test">
       <RouterProvider router={router} />
     </Providers>,
   );
@@ -30,5 +30,9 @@ export function renderRoute(path: string) {
  * @returns Testing Library's render result.
  */
 export function renderWithProviders(element: ReactElement) {
-  return render(<Providers queryClient={createQueryClient()}>{element}</Providers>);
+  return render(
+    <Providers queryClient={createQueryClient()} env="test">
+      {element}
+    </Providers>,
+  );
 }

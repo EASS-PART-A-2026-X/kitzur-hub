@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from sqlmodel import SQLModel
 
 from app.db import database_url, make_engine
-from app.routers import courses, lectures, tasks
+from app.routers import courses, lectures, materials, questions, tasks
 from app.seed import seed
 
 
@@ -51,6 +51,8 @@ def create_app(url: str | None = None, *, seed_demo: bool = True) -> FastAPI:
     app.include_router(courses.router)
     app.include_router(lectures.router)
     app.include_router(tasks.router)
+    app.include_router(materials.router)
+    app.include_router(questions.router)
     return app
 
 

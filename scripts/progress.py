@@ -1,12 +1,12 @@
-"""Update the progress block in docs/guide.html.
+"""Read and update the stage tracker in docs/progress.json.
 
 Usage:
-    python scripts/progress.py                       # print all stages
-    python scripts/progress.py 1.2 in_progress --agent codex
-    python scripts/progress.py 1.2 done --note "Tables and schemas, 14 tests"
+    python scripts/progress.py                 # all stages, one line each
+    python scripts/progress.py next            # the first stage that is not done
+    python scripts/progress.py 3.2 in_progress --agent claude
+    python scripts/progress.py 3.2 done --note "Summary agent, 14 tests"
 
-Only the JSON inside <script type="application/json" id="progress"> is touched,
-so agents never need to read or rewrite the rest of the guide.
+If the local docs/guide.html exists, its progress table is kept in sync.
 """
 
 import argparse
@@ -16,63 +16,63 @@ import re
 import sys
 from pathlib import Path
 
-GUIDE = Path(__file__).resolve().parent.parent / "docs" / "guide.html"
-BLOCK = re.compile(
+DOCS = Path(__file__).resolve().parent.parent / "docs"
+TRACKER = DOCS / "progress.json"
+GUIDE = DOCS / "guide.html"
+GUIDE_BLOCK = re.compile(
     r'(<script type="application/json" id="progress">\n)(.*?)(\n</script>)', re.DOTALL
 )
 STATUSES = ("todo", "in_progress", "done", "blocked")
 
 
-def load(html: str) -> dict:
-    """Extract and parse the progress JSON from the guide.
+def save(data: dict) -> None:
+    """Write the tracker, and mirror it into the local guide when present.
 
     Args:
-        html: Full guide HTML.
-
-    Returns:
-        The parsed progress object.
-
-    Raises:
-        SystemExit: If the block is missing.
-    """
-    match = BLOCK.search(html)
-    if not match:
-        sys.exit("progress block not found in docs/guide.html")
-    return json.loads(match.group(2))
-
-
-def save(html: str, data: dict) -> str:
-    """Return the guide HTML with the progress block replaced by ``data``.
-
-    Args:
-        html: Full guide HTML.
-        data: Progress object to serialize.
-
-    Returns:
-        Updated HTML.
+        data: Tracker object.
     """
     body = json.dumps(data, indent=1, ensure_ascii=False)
-    return BLOCK.sub(lambda m: m.group(1) + body + m.group(3), html, count=1)
+    TRACKER.write_text(body + "\n", encoding="utf-8")
+    if GUIDE.exists():
+        html = GUIDE.read_text(encoding="utf-8")
+        GUIDE.write_text(
+            GUIDE_BLOCK.sub(lambda m: m.group(1) + body + m.group(3), html, count=1),
+            encoding="utf-8",
+        )
+
+
+def line(stage: dict) -> str:
+    """Format one stage for the terminal.
+
+    Args:
+        stage: Stage entry.
+
+    Returns:
+        A single line: id, status, agent, title.
+    """
+    return f"{stage['id']:<5} {stage['status']:<12} {stage['agent']:<7} {stage['title']}"
 
 
 def main() -> None:
-    """Parse arguments and print or update one stage."""
+    """Print the tracker, print the next stage, or update one stage."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("stage", nargs="?")
+    parser.add_argument("stage", nargs="?", help="stage id, or 'next'")
     parser.add_argument("status", nargs="?", choices=STATUSES)
     parser.add_argument("--agent")
     parser.add_argument("--note")
     args = parser.parse_args()
 
-    html = GUIDE.read_text(encoding="utf-8")
-    data = load(html)
-
-    if not args.stage:
-        for st in data["stages"]:
-            print(f"{st['id']:<5} {st['status']:<12} {st['agent']:<8} {st['title']}")
+    data = json.loads(TRACKER.read_text(encoding="utf-8"))
+    stages = data["stages"]
+    if args.stage is None:
+        print("\n".join(line(s) for s in stages))
+        return
+    if args.stage == "next":
+        pending = next((s for s in stages if s["status"] != "done"), None)
+        print(line(pending) if pending else "all stages done")
         return
 
-    stage = next((s for s in data["stages"] if s["id"] == args.stage), None)
+    stage = next((s for s in stages if s["id"] == args.stage), None)
     if stage is None:
         sys.exit(f"unknown stage {args.stage}")
     if args.status:
@@ -82,8 +82,8 @@ def main() -> None:
     if args.note is not None:
         stage["note"] = args.note
     data["updated"] = dt.date.today().isoformat()
-    GUIDE.write_text(save(html, data), encoding="utf-8")
-    print(f"{stage['id']} -> {stage['status']}")
+    save(data)
+    print(line(stage))
 
 
 if __name__ == "__main__":
