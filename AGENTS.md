@@ -11,9 +11,17 @@ Kitzur Hub: an EASS (HIT) course product, grown over three assignments.
 | `frontend/` | React 19, TypeScript, Mantine (RTL), TanStack Query, i18next, served by nginx | EX2 |
 | `ai-service/` | Pydantic AI on OpenRouter | EX3 (not started) |
 
-Status: EX1 and EX2 complete (stages 1.1 to 1.6 and 2.1 to 2.9). The design, decisions and course
-requirements live in `docs/guide.html` (local planning file, gitignored; ask the owner for it if
-missing). Read its "Decisions" section before changing anything structural.
+## Project memory (read in this order, only as needed)
+| File | Holds | Update when |
+|---|---|---|
+| `AGENTS.md` (this file) | Hard rules, how to work, lessons learned | A rule or lesson changes |
+| `python3 scripts/progress.py` | What is done and what is next (from `docs/progress.json`) | Starting or finishing a stage |
+| `docs/plan.md` | Current status, next stages with "done when", backlog, open questions | Scope or stages change |
+| `docs/decisions.md` | Append-only decision log | A decision is made |
+| `README.md` | How to run and test, API, evidence for graders | Behavior or commands change |
+
+Read the plan row of your stage, not whole files or the whole repo. `docs/guide.html` is the
+owner's local course guide (gitignored); it mirrors the tracker but is not needed by agents.
 
 ## Hard rules
 1. Clean, minimal code. No filler comments, no speculative abstractions, no unused exports or props.
@@ -21,13 +29,16 @@ missing). Read its "Decisions" section before changing anything structural.
 3. Every function, method, component and module has a short docstring (Google style in Python,
    JSDoc in TypeScript). Ruff rule set `D` enforces it in Python.
 4. Complex logic gets a short developer note explaining WHY, not what.
-5. Anything not already agreed in `docs/guide.html` (Decisions) must be asked to the owner (Gitam) before implementing.
+5. Anything not already in `docs/decisions.md` or `docs/plan.md` must be asked to the owner (Gitam) before implementing.
 6. Tests never call a paid API or the network.
 7. Never commit secrets, real course PDFs or `.db` files. A real transcript is committed only after
    `backend/scripts/anonymize_transcript.py` (speaker roles, names in text, contact details).
    Raw files and the names list stay in `private/` (gitignored).
 8. Never claim a check you did not run. If something could not be verified (for example a Docker
    build without registry access), say so in the stage summary.
+9. No AI attribution anywhere in Git: no co-author lines, session links or "generated with" footers in
+   commits or PRs. The `commit-msg` hook rejects them (enable once per clone:
+   `git config core.hooksPath scripts/hooks`).
 
 ## Backend rules (`backend/`)
 1. One resource, one pattern: `Base` → table / `Create` / `Update` (PATCH, `NOT_NULL` for required
@@ -71,13 +82,12 @@ missing). Read its "Decisions" section before changing anything structural.
 - Branch names: `ex<N>/<stage>-<topic>`, for example `ex3/3.2-summary-agent`.
 - When stages are stacked (each branch built on the previous one), merge PRs oldest first with a
   merge commit (`gh pr merge <branch> --merge --delete-branch`), so the next PR keeps a clean diff.
+- Parallel sessions: one `git worktree` per stage, and claim the stage in the tracker first.
 - Commit and push are done by the owner unless he asks otherwise.
 
-## Progress tracking
-The single source of truth is the JSON block `<script id="progress">` inside `docs/guide.html`.
-Use `python scripts/progress.py <stage> <status> --agent <name> --note "..."`
-(`python scripts/progress.py` lists stages). Statuses: `todo`, `in_progress`, `done`, `blocked`.
-Blocked: put the question in `note`.
+## Claude Code commands
+`/stage <id>` claims and starts a stage, `/finish-stage <id>` verifies, records and summarizes it,
+`/review` reviews the branch diff against these rules. Other agents: follow the same steps by hand.
 
 ## Commands
 Whole stack: `docker compose up --build --wait`, then http://localhost:8501 (API on :8000).
@@ -102,7 +112,8 @@ separate copy: macOS and Linux need different native binaries.
 2. `python scripts/check_no_em_dash.py` passes.
 3. UI changes were looked at in a real browser (desktop and phone width), not only in tests.
 4. The stage summary says what was done, how, what to understand, and what was not verified.
-5. Progress block updated.
+5. `python3 scripts/progress.py <id> done --note "..."`; new decisions appended to `docs/decisions.md`;
+   `docs/plan.md` updated if what is left changed.
 
 ## Lessons learned (keep adding)
 Each one cost time once. Turn new ones into a rule here.
@@ -117,3 +128,4 @@ Each one cost time once. Turn new ones into a rule here.
 | New major versions (TypeScript 7, MSW 3, Mantine 9) changed APIs | Read the installed `.d.ts` before using an API; pin tools that need an older compiler (TypeScript 5.9 for openapi-typescript) |
 | jsdom: Mantine modals animate, `scrollIntoView` is missing, uploaded files lose their names | Use `tests/render.tsx` (Mantine test env), the setup polyfills, and let mocks tell files apart by content |
 | The owner's computer went to sleep mid-stage | Commit at the end of every stage and keep work reproducible from a clean clone |
+| Commits carried an AI co-author line against the owner's rule | The `commit-msg` hook blocks it; tool defaults are never trusted for this |

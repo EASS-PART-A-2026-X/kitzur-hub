@@ -196,9 +196,13 @@ backend/        FastAPI app (app/), tests/, scripts/ (anonymizer, OpenAPI export
 frontend/       React app (src/), tests/ (Vitest), e2e/ (Playwright), Dockerfile, nginx.conf
 compose.yaml    backend + frontend with health checks and the data volume
 samples/        transcripts and a syllabus for upload demos
-scripts/        progress.py (tracker), check_no_em_dash.py (style check)
+scripts/        progress.py (stage tracker), check_no_em_dash.py (style check), hooks/ (commit-msg guard)
+docs/           plan.md (what is left), decisions.md (decision log), progress.json (stage status)
+.claude/        Claude Code settings and commands (/stage, /finish-stage, /review)
 AGENTS.md       rules, workflow and lessons learned for AI coding agents working in this repo
 ```
+
+After cloning, enable the commit message guard once: `git config core.hooksPath scripts/hooks`.
 
 ## AI use
 
